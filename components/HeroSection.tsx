@@ -28,22 +28,22 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(212,177,111,0.18),_transparent_35%)]" />
       </motion.div>
 
-      <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-between px-6 py-8 sm:px-8 lg:px-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-xl">
-            <div className="h-12 w-12 overflow-hidden rounded-3xl border border-[#d4b16f]/20 bg-[#11223b]/80">
+      <div className="relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-between px-6 py-8 sm:px-8 lg:px-10">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4 rounded-3xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-xl">
+            <div className="h-14 w-14 md:h-16 md:w-16 overflow-hidden rounded-[1.75rem] border border-[#d4b16f]/20 bg-[#11223b]/80">
               <AdaptiveImage src="/logo.jpg" alt="Godmill logo" className="h-full w-full object-cover" />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.45em] text-[#d4b16f]">Godmill City</p>
-              <p className="text-sm font-semibold">Guesthouse</p>
+              <p className="text-xs sm:text-sm uppercase tracking-[0.45em] text-[#d4b16f]">Godmill City</p>
+              <p className="text-base sm:text-lg font-semibold text-[#f6efe6]">Guesthouse</p>
             </div>
           </div>
           <a
             href="#rooms"
-            className="inline-flex items-center rounded-full bg-[#d4b16f] px-5 py-3 text-sm font-semibold text-[#071421] shadow-lg shadow-[#171717]/25 transition hover:bg-[#c9a95e]"
+            className="inline-flex items-center rounded-full bg-[#d4b16f] px-6 py-3 text-base font-semibold text-[#071421] shadow-lg shadow-[#171717]/25 transition hover:bg-[#c9a95e]"
           >
-            Book Now
+            Book Your Stay
           </a>
         </div>
 
@@ -55,21 +55,21 @@ export default function HeroSection() {
         >
           <p className="text-sm uppercase tracking-[0.5em] text-[#d4b16f]">Luxury city escape</p>
           <h1 className="max-w-3xl text-5xl font-semibold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
-            Godmill City Guesthouse
+            Premium rooms, poolside comfort, and trusted local service in Taung.
           </h1>
           <p className="max-w-2xl text-base leading-8 text-[#d9d1c6] sm:text-lg">
-            Discover elegant rooms, a cinematic poolside atmosphere and five-star service with a warm local welcome.
+            Discover elegant rooms, a cinematic poolside atmosphere, and personalized booking support near Boemma Waters.
           </p>
           <div className="flex flex-wrap gap-4">
             <a
               href="#rooms"
-              className="inline-flex items-center justify-center rounded-full bg-[#d4b16f] px-8 py-4 text-sm font-semibold text-[#071421] transition hover:bg-[#c9a95e]"
+              className="inline-flex items-center justify-center rounded-full bg-[#d4b16f] px-10 py-4 text-base font-semibold text-[#071421] transition hover:bg-[#c9a95e]"
             >
-              Explore rooms
+              View rooms
             </a>
             <a
               href="https://wa.me/27790582637"
-              className="inline-flex items-center justify-center rounded-full border border-[#d4b16f]/40 bg-[#ffffff0f] px-8 py-4 text-sm font-semibold text-[#f6efe6] transition hover:border-[#d4b16f] hover:bg-[#ffffff16]"
+              className="inline-flex items-center justify-center rounded-full border border-[#d4b16f]/40 bg-[#ffffff0f] px-10 py-4 text-base font-semibold text-[#f6efe6] transition hover:border-[#d4b16f] hover:bg-[#ffffff16]"
             >
               WhatsApp 079 058 2637
             </a>
@@ -84,7 +84,7 @@ export default function HeroSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.5 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="space-y-1 text-[#d9d1c6]"
+              className="space-y-2 rounded-3xl bg-[#ffffff05] px-4 py-5 text-[#d9d1c6]"
             >
               <p className="text-2xl font-semibold text-[#f8f2ea]">{stat.value}</p>
               <p className="text-sm uppercase tracking-[0.25em] text-[#d4b16f]">{stat.label}</p>

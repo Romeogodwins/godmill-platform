@@ -1,4 +1,5 @@
 import SectionHeading from "./SectionHeading";
+import { MapIcon, PhoneIcon, WhatsAppIcon } from "./Icons";
 
 const mapLink = "https://www.google.com/maps/search/?api=1&query=No.+217+Khibitswane+Taung+Cokonyane+Road+near+Boemma+Waters";
 
@@ -22,25 +23,28 @@ export default function LocationSection() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <a
             href="https://wa.me/27790582637"
-            className="block rounded-[1.5rem] bg-[#d4b16f] px-6 py-5 text-center text-sm font-semibold text-[#071421] transition hover:bg-[#c9a95e]"
+            className="flex items-center justify-center gap-3 rounded-[1.5rem] bg-[#d4b16f] px-6 py-5 text-center text-sm font-semibold text-[#071421] transition hover:bg-[#c9a95e]"
           >
+            <WhatsAppIcon />
             WhatsApp 079 058 2637
           </a>
           <a
             href="tel:0790582637"
-            className="block rounded-[1.5rem] border border-[#d4b16f]/30 bg-[#0f2948] px-6 py-5 text-center text-sm font-semibold text-[#f6efe6] transition hover:border-[#d4b16f] hover:bg-[#132f5d]"
+            className="flex items-center justify-center gap-3 rounded-[1.5rem] border border-[#d4b16f]/30 bg-[#0f2948] px-6 py-5 text-center text-sm font-semibold text-[#f6efe6] transition hover:border-[#d4b16f] hover:bg-[#132f5d]"
           >
+            <PhoneIcon />
             Call 079 058 2637
           </a>
           <a
             href={mapLink}
             target="_blank"
             rel="noreferrer"
-            className="block rounded-[1.5rem] border border-[#d4b16f]/30 bg-[#ffffff0f] px-6 py-5 text-center text-sm font-semibold text-[#f6efe6] transition hover:border-[#d4b16f] hover:bg-[#ffffff16]"
+            className="flex items-center justify-center gap-3 rounded-[1.5rem] border border-[#d4b16f]/30 bg-[#ffffff0f] px-6 py-5 text-center text-sm font-semibold text-[#f6efe6] transition hover:border-[#d4b16f] hover:bg-[#ffffff16]"
           >
+            <MapIcon />
             View directions
           </a>
         </div>

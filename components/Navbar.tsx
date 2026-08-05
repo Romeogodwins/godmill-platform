@@ -18,8 +18,8 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-white/10 backdrop-blur-2xl shadow-xl shadow-black/20">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 text-[#f6efe6] md:px-10">
-        <a href="#home" className="flex items-center gap-3">
-          <div className="h-12 w-12 overflow-hidden rounded-3xl border border-[#d4b16f]/20 bg-[#11223b]/70">
+        <a href="#home" className="flex items-center gap-4">
+          <div className="h-14 w-14 overflow-hidden rounded-[1.75rem] border border-[#d4b16f]/20 bg-[#11223b]/70 md:h-16 md:w-16">
             <AdaptiveImage
               src="/logo.jpg"
               alt="Godmill City Guesthouse logo"
@@ -27,8 +27,8 @@ export default function Navbar() {
             />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.45em] text-[#d4b16f]">Godmill City</p>
-            <p className="text-base font-semibold text-[#f6efe6]">Guesthouse</p>
+            <p className="text-xs sm:text-sm uppercase tracking-[0.45em] text-[#d4b16f]">Godmill City</p>
+            <p className="text-base sm:text-lg font-semibold text-[#f6efe6]">Guesthouse</p>
           </div>
         </a>
 
