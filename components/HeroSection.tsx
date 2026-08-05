@@ -5,9 +5,9 @@ import AdaptiveImage from "./AdaptiveImage";
 
 const stats = [
   { label: "Executive Room", value: "1" },
-  { label: "Standard Rooms", value: "5" },
-  { label: "Family Rooms", value: "2" },
-  { label: "Swimming Pool", value: "1" },
+  { label: "2-Sleeper Rooms", value: "Available" },
+  { label: "3-Sleeper Family Rooms", value: "Available" },
+  { label: "Optional Breakfast", value: "R120pp" },
 ];
 
 export default function HeroSection() {

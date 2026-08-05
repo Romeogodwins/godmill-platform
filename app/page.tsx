@@ -1,8 +1,12 @@
 ﻿import AdaptiveImage from "@/components/AdaptiveImage";
+import FooterSection from "@/components/FooterSection";
+import GalleryLightbox from "@/components/GalleryLightbox";
 import HeroSection from "@/components/HeroSection";
+import LocationSection from "@/components/LocationSection";
 import Navbar from "@/components/Navbar";
 import RoomCard from "@/components/RoomCard";
 import SectionHeading from "@/components/SectionHeading";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import WhatsAppBooking from "@/components/WhatsAppBooking";
 
 const rooms = [
@@ -11,39 +15,40 @@ const rooms = [
     name: "Executive Room",
     price: "R750 per night",
     features: ["Sleeps 2", "Air-conditioned", "Only one available", "En-suite bathroom"],
-    highlight: "Best value",
+    highlight: "Executive",
   },
   {
     image: "/images/standard-room.jpg",
-    name: "Standard Double Room",
+    name: "Standard Double Room (Air-conditioned)",
     price: "R600 per night",
-    features: ["Air-conditioned", "En-suite bathroom", "Comfortable queen bed"],
+    features: ["Sleeps 2", "Air-conditioned", "En-suite bathroom"],
   },
   {
     image: "/images/standard-room.jpg",
-    name: "Standard Double Room",
+    name: "Standard Double Room (Non-air-conditioned)",
     price: "R500 per night",
-    features: ["Non-air-conditioned", "En-suite bathroom", "Spacious layout"],
+    features: ["Sleeps 2", "Non-air-conditioned", "En-suite bathroom"],
   },
   {
     image: "/images/family-room.jpg",
-    name: "Family 3-Sleeper Room",
+    name: "Family 3-Sleeper Room (Air-conditioned)",
     price: "R850 per night",
-    features: ["Air-conditioned", "Sleeps 3", "En-suite bathroom"],
+    features: ["Sleeps 3", "Air-conditioned", "En-suite bathroom"],
   },
   {
     image: "/images/family-room.jpg",
-    name: "Family 3-Sleeper Room",
+    name: "Family 3-Sleeper Room (Non-air-conditioned)",
     price: "R750 per night",
-    features: ["Non-air-conditioned", "Sleeps 3", "En-suite bathroom"],
+    features: ["Sleeps 3", "Non-air-conditioned", "En-suite bathroom"],
   },
 ];
 
 const facilities = [
-  "Heated swimming pool with lounge area",
-  "Secure parking and 24/7 reception",
-  "Complimentary WiFi in every room",
-  "Premium linen and private showers",
+  "Swimming pool",
+  "Free Wi-Fi",
+  "Secure parking",
+  "Conference facilities",
+  "Laundry service",
 ];
 
 const galleryImages = [
@@ -77,11 +82,11 @@ export default function Home() {
           <div>
             <SectionHeading
               eyebrow="Swimming Pool"
-              title="Relax beside the private pool."
-              description="Enjoy the golden sun terrace, comfortable loungers and a refreshing pool set against the guesthouse's elegant navy backdrop."
+              title="Relax beside the pool."
+              description="Enjoy a soothing pool area and elegant surroundings designed for a calm guesthouse stay."
             />
             <p className="max-w-xl text-base leading-8 text-[#d9d1c6]">
-              Our pool area is designed for relaxed afternoons and family time. Towels are provided, and the setting is perfect for unwinding after a day exploring the city.
+              Our swimming pool is available for guest use, offering a peaceful place to relax after a day of travel.
             </p>
           </div>
           <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b1e3a]/80 shadow-[0_35px_80px_-45px_rgba(0,0,0,0.8)]">
@@ -93,8 +98,8 @@ export default function Home() {
       <section id="facilities" className="mx-auto max-w-7xl px-6 py-20 sm:px-8 lg:px-10">
         <SectionHeading
           eyebrow="Facilities"
-          title="Designed for effortless comfort."
-          description="From secure parking to fast WiFi, every detail has been curated to make your stay seamless and memorable."
+          title="Guesthouse amenities you can rely on."
+          description="Swimming pool, free Wi-Fi, secure parking, conference facilities and laundry service are available for a comfortable stay."
         />
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {facilities.map((item) => (
@@ -112,8 +117,8 @@ export default function Home() {
             <div>
               <SectionHeading
                 eyebrow="Breakfast"
-                title="Optional breakfast, served fresh daily."
-                description="Start your day with a delicious breakfast at only R120 per person. Enjoy warm coffee, fresh fruit and a choice of breakfast favourites."
+                title="Optional breakfast at R120 per person."
+                description="Add breakfast to your stay for R120 per person. The guesthouse offers a simple, optional morning meal service."
               />
             </div>
             <div className="rounded-[2rem] border border-[#d4b16f]/15 bg-[#0b1e3a]/90 p-10 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.8)]">
@@ -121,22 +126,8 @@ export default function Home() {
                 <p className="text-sm uppercase tracking-[0.35em] text-[#d4b16f]">Add-on</p>
                 <p className="text-4xl font-semibold text-[#f8f2ea]">R120 per person</p>
                 <p className="text-base leading-8">
-                  Breakfast is optional and available each morning. Choose a relaxed continental or hot plated breakfast to complement your stay.
+                  Breakfast is optional and available for guests who would like a simple meal to start the day.
                 </p>
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-3 text-[#d9d1c6]">
-                    <span className="inline-flex h-3.5 w-3.5 rounded-full bg-[#d4b16f]" />
-                    Fresh pastries, fruit and eggs
-                  </li>
-                  <li className="flex items-center gap-3 text-[#d9d1c6]">
-                    <span className="inline-flex h-3.5 w-3.5 rounded-full bg-[#d4b16f]" />
-                    Premium coffee and tea selections
-                  </li>
-                  <li className="flex items-center gap-3 text-[#d9d1c6]">
-                    <span className="inline-flex h-3.5 w-3.5 rounded-full bg-[#d4b16f]" />
-                    Served until 10:30 am daily
-                  </li>
-                </ul>
               </div>
             </div>
           </div>
@@ -147,57 +138,22 @@ export default function Home() {
         <SectionHeading
           eyebrow="Gallery"
           title="A glimpse inside your stay."
-          description="See the elegant rooms, soothing pool and premium finishes that make Godmill City Guesthouse a standout destination."
+          description="Explore the guesthouse and room images. Tap any image to enlarge the view."
         />
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {galleryImages.map((item) => (
-            <div key={item.src} className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b1e3a]/80">
-              <AdaptiveImage src={item.src} alt={item.alt} className="h-64 w-full object-cover" />
-            </div>
-          ))}
+        <div className="space-y-6">
+          <GalleryLightbox />
         </div>
       </section>
 
-      <section id="contact" className="bg-[#091b32] py-20">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 xl:px-10">
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-            <div className="space-y-6">
-              <p className="text-sm uppercase tracking-[0.35em] text-[#d4b16f]">Contact</p>
-              <h2 className="text-3xl font-semibold tracking-tight text-[#f8f2ea] sm:text-4xl">
-                Ready to plan your stay?
-              </h2>
-              <p className="max-w-xl text-base leading-8 text-[#d9d1c6]">
-                Reach out with questions, room requests or custom booking arrangements. We are here to make your visit exceptional.
-              </p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <a href="tel:0790582637" className="rounded-3xl bg-[#0f2948] px-6 py-5 text-base font-semibold text-[#f6efe6] transition hover:bg-[#132f5d]">
-                  079 058 2637
-                </a>
-                <a href="tel:0614137405" className="rounded-3xl bg-[#0f2948] px-6 py-5 text-base font-semibold text-[#f6efe6] transition hover:bg-[#132f5d]">
-                  061 413 7405
-                </a>
-              </div>
-            </div>
-            <div className="rounded-[2rem] border border-[#d4b16f]/15 bg-[#0b1e3a]/90 p-10 shadow-[0_30px_60px_-40px_rgba(0,0,0,0.8)]">
-              <p className="text-sm uppercase tracking-[0.35em] text-[#d4b16f]">Location</p>
-              <p className="mt-4 text-base leading-8 text-[#d9d1c6]">
-                Godmill City Guesthouse offers a central location with easy access to local attractions, dining and transport links.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <LocationSection />
+
+      <TestimonialsSection />
 
       <div className="mx-auto max-w-7xl px-6 pb-20 sm:px-8 lg:px-10">
         <WhatsAppBooking />
       </div>
 
-      <footer className="border-t border-white/10 bg-[#061025] py-8 text-[#9c958b]">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
-          <p>Godmill City Guesthouse - Premium city hospitality</p>
-          <p>079 058 2637 · 061 413 7405</p>
-        </div>
-      </footer>
+      <FooterSection />
     </main>
   );
 }
