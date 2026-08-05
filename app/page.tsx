@@ -1,4 +1,5 @@
 ﻿import AdaptiveImage from "@/components/AdaptiveImage";
+import HeroSection from "@/components/HeroSection";
 import Navbar from "@/components/Navbar";
 import RoomCard from "@/components/RoomCard";
 import SectionHeading from "@/components/SectionHeading";
@@ -56,43 +57,7 @@ export default function Home() {
   return (
     <main className="bg-[#071421] text-[#f6efe6]">
       <Navbar />
-
-      <section id="home" className="relative min-h-[88vh] overflow-hidden bg-[#071421]">
-        <div className="absolute inset-0">
-          <AdaptiveImage
-            src="/images/hero.jpg"
-            alt="Godmill City Guesthouse hero image"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#071421]/50 via-[#071421]/60 to-[#071421]/95" />
-        </div>
-
-        <div className="relative mx-auto flex min-h-[88vh] max-w-7xl flex-col justify-center px-6 py-24 sm:px-8 lg:px-10">
-          <div className="max-w-3xl space-y-6">
-            <p className="text-sm uppercase tracking-[0.45em] text-[#d4b16f]">Godmill City Guesthouse</p>
-            <h1 className="text-5xl font-semibold leading-tight sm:text-6xl lg:text-7xl">
-              A refined retreat in the heart of the city.
-            </h1>
-            <p className="max-w-2xl text-base leading-8 text-[#d9d1c6] sm:text-lg">
-              Discover elegant rooms, a private swimming pool, premium service and a calm atmosphere designed for families, couples and business travellers.
-            </p>
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <a
-                href="#rooms"
-                className="inline-flex max-w-max items-center justify-center rounded-full bg-[#d4b16f] px-8 py-4 text-sm font-semibold text-[#071421] transition hover:bg-[#c9a95e]"
-              >
-                Explore rooms
-              </a>
-              <a
-                href="https://wa.me/27790582637"
-                className="inline-flex max-w-max items-center justify-center rounded-full border border-[#d4b16f]/40 bg-[#ffffff0f] px-8 py-4 text-sm font-semibold text-[#f6efe6] transition hover:border-[#d4b16f] hover:bg-[#ffffff16]"
-              >
-                WhatsApp 079 058 2637
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       <section id="rooms" className="mx-auto max-w-7xl px-6 py-20 sm:px-8 lg:px-10">
         <SectionHeading

@@ -16,10 +16,10 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#071421]/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-white/10 backdrop-blur-2xl shadow-xl shadow-black/20">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 text-[#f6efe6] md:px-10">
         <a href="#home" className="flex items-center gap-3">
-          <div className="h-12 w-12 overflow-hidden rounded-2xl border border-[#d4b16f]/30 bg-[#11223b]">
+          <div className="h-12 w-12 overflow-hidden rounded-3xl border border-[#d4b16f]/20 bg-[#11223b]/70">
             <AdaptiveImage
               src="/logo.jpg"
               alt="Godmill City Guesthouse logo"
@@ -27,8 +27,8 @@ export default function Navbar() {
             />
           </div>
           <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-[#d4b16f]">Godmill City</p>
-            <p className="text-base font-semibold">Guesthouse</p>
+            <p className="text-xs uppercase tracking-[0.45em] text-[#d4b16f]">Godmill City</p>
+            <p className="text-base font-semibold text-[#f6efe6]">Guesthouse</p>
           </div>
         </a>
 
@@ -37,7 +37,7 @@ export default function Navbar() {
             <a
               key={item.href}
               href={item.href}
-              className="text-sm font-medium transition hover:text-[#d4b16f]"
+              className="text-sm font-medium text-[#f6efe6] transition hover:text-[#d4b16f]"
             >
               {item.label}
             </a>
@@ -50,6 +50,12 @@ export default function Navbar() {
             className="rounded-full border border-[#d4b16f]/40 bg-[#d4b16f]/10 px-4 py-2 text-sm font-semibold text-[#f6efe6] transition hover:border-[#d4b16f] hover:bg-[#d4b16f]/15"
           >
             079 058 2637
+          </a>
+          <a
+            href="#rooms"
+            className="rounded-full bg-[#d4b16f] px-4 py-2 text-sm font-semibold text-[#071421] transition hover:bg-[#c9a95e]"
+          >
+            Book Now
           </a>
           <button
             type="button"

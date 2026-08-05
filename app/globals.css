@@ -35,8 +35,17 @@
     background: radial-gradient(circle at top, rgba(212, 177, 111, 0.06), transparent 28%),
       linear-gradient(180deg, #071421 0%, #061623 100%);
     color: var(--text);
-    font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading), Georgia, Cambria, "Times New Roman", Times, serif;
   }
 
   a {
