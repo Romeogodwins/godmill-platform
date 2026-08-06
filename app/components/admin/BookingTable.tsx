@@ -1,10 +1,10 @@
-import type { Booking, BookingStatus } from "./mockData";
+import type { BookingRecord } from "../../../lib/supabase-types";
 
 interface BookingTableProps {
-  bookings: Booking[];
+  bookings: BookingRecord[];
 }
 
-const statusClasses: Record<BookingStatus, string> = {
+const statusClasses: Record<string, string> = {
   Pending: "bg-amber-500/15 text-amber-300",
   Confirmed: "bg-emerald-500/15 text-emerald-300",
   "Checked In": "bg-sky-500/15 text-sky-300",
@@ -35,15 +35,15 @@ export default function BookingTable({ bookings }: BookingTableProps) {
             {bookings.map((booking) => (
               <tr key={booking.id} className="hover:bg-white/5">
                 <td className="px-4 py-4 font-semibold text-white">#{booking.id}</td>
-                <td className="px-4 py-4">{booking.guestName}</td>
+                <td className="px-4 py-4">{booking.guest_name}</td>
                 <td className="px-4 py-4">{booking.phone}</td>
-                <td className="px-4 py-4">{booking.room}</td>
-                <td className="px-4 py-4">{booking.checkIn}</td>
-                <td className="px-4 py-4">{booking.checkOut}</td>
-                <td className="px-4 py-4">{booking.guests}</td>
+                <td className="px-4 py-4">{booking.room_type}</td>
+                <td className="px-4 py-4">{booking.check_in}</td>
+                <td className="px-4 py-4">{booking.check_out}</td>
+                <td className="px-4 py-4">{booking.adults + booking.children}</td>
                 <td className="px-4 py-4">{booking.breakfast ? "Yes" : "No"}</td>
                 <td className="px-4 py-4">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClasses[booking.status]}`}>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClasses[booking.status] ?? "bg-white/10 text-white"}`}>
                     {booking.status}
                   </span>
                 </td>

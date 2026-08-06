@@ -9,6 +9,7 @@ interface BookingFormProps {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onWhatsApp: () => void;
   submitted: boolean;
+  isSubmitting?: boolean;
 }
 
 export default function BookingForm({
@@ -18,6 +19,7 @@ export default function BookingForm({
   onSubmit,
   onWhatsApp,
   submitted,
+  isSubmitting = false,
 }: BookingFormProps) {
   return (
     <form onSubmit={onSubmit} className="rounded-[2rem] border border-white/10 bg-[#101010]/90 p-6 shadow-2xl shadow-black/20 md:p-8">
@@ -214,9 +216,10 @@ export default function BookingForm({
         </button>
         <button
           type="submit"
-          className="rounded-full bg-[#d4b16f] px-6 py-3 text-center font-semibold text-black transition hover:bg-[#e2c486]"
+          disabled={isSubmitting}
+          className="rounded-full bg-[#d4b16f] px-6 py-3 text-center font-semibold text-black transition hover:bg-[#e2c486] disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Submit Booking Request
+          {isSubmitting ? "Submitting..." : "Submit Booking Request"}
         </button>
       </div>
     </form>

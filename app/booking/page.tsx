@@ -5,6 +5,7 @@ import { type ChangeEvent, type FormEvent, useState } from "react";
 import BookingForm from "../components/booking/BookingForm";
 import BookingSummary from "../components/booking/BookingSummary";
 import type { BookingErrors, BookingFormState } from "../components/booking/types";
+import { supabase } from "../../lib/supabase";
 
 const initialForm: BookingFormState = {
   checkIn: "",
@@ -27,6 +28,8 @@ export default function BookingPage() {
   const [form, setForm] = useState<BookingFormState>(initialForm);
   const [errors, setErrors] = useState<BookingErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   const validate = (values: BookingFormState) => {
     const nextErrors: BookingErrors = {};
@@ -89,15 +92,74 @@ export default function BookingPage() {
     setErrors((current) => ({ ...current, [name]: undefined }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextErrors = validate(form);
     setErrors(nextErrors);
 
-    if (Object.keys(nextErrors).length === 0) {
-      setSubmitted(true);
-    } else {
+    if (Object.keys(nextErrors).length > 0) {
       setSubmitted(false);
+      setFeedback("Please complete the highlighted fields before submitting.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFeedback(null);
+
+    try {
+      const adults = Number(form.adults);
+      const children = Number(form.children || 0);
+      const checkIn = new Date(form.checkIn);
+      const checkOut = new Date(form.checkOut);
+      const nights = Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
+
+      const roomRate =
+        form.roomType === "Standard Double" || form.roomType === "Family 3 Sleeper"
+          ? form.aircon === "Non-Aircon"
+            ? form.roomType === "Standard Double"
+              ? 500
+              : 750
+            : form.roomType === "Standard Double"
+              ? 600
+              : 850
+          : 750;
+
+      const roomTotal = nights * roomRate;
+      const breakfastTotal = form.breakfast ? (adults + children) * 120 : 0;
+      const grandTotal = roomTotal + breakfastTotal;
+      const bookingReference = `GMC-${Date.now().toString().slice(-6)}`;
+
+      const { error } = await supabase.from("Bookings").insert({
+        booking_reference: bookingReference,
+        guest_name: form.guestName.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        room_type: form.roomType,
+        aircon: form.roomType === "Executive Room" ? "Aircon" : form.aircon,
+        adults,
+        children,
+        breakfast: form.breakfast,
+        check_in: form.checkIn,
+        check_out: form.checkOut,
+        nights,
+        room_total: roomTotal,
+        breakfast_total: breakfastTotal,
+        grand_total: grandTotal,
+        status: "Pending",
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setSubmitted(true);
+      setFeedback(`Booking submitted successfully. Reference: ${bookingReference}`);
+    } catch (error) {
+      console.error(error);
+      setSubmitted(false);
+      setFeedback("We could not save your booking right now. Please try again shortly.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -166,6 +228,12 @@ export default function BookingPage() {
 
       <section className="px-6 py-10 md:px-12 lg:px-16">
         <div className="mx-auto max-w-7xl">
+          {feedback ? (
+            <div className={`mb-6 rounded-2xl border px-4 py-3 text-sm ${feedback.includes("success") ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-amber-500/30 bg-amber-500/10 text-amber-300"}`}>
+              {feedback}
+            </div>
+          ) : null}
+
           <BookingForm
             form={form}
             errors={errors}
@@ -173,6 +241,7 @@ export default function BookingPage() {
             onSubmit={handleSubmit}
             onWhatsApp={handleWhatsApp}
             submitted={submitted}
+            isSubmitting={isSubmitting}
           />
         </div>
       </section>
