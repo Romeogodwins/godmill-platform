@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 const rooms = [
   {
@@ -117,10 +118,7 @@ const faqs = [
 export default function Home() {
   return (
     <main className="bg-[#080808] text-white">
-      <section
-        id="home"
-        className="relative min-h-screen overflow-hidden"
-      >
+      <section id="home" className="relative min-h-screen overflow-hidden">
         <Image
           src="/hero.jpg"
           alt="Godmill City Guesthouse"
@@ -180,12 +178,12 @@ export default function Home() {
             </p>
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:gap-6">
-              <a
-                href="tel:0790582637"
+              <Link
+                href="/booking"
                 className="rounded-full bg-[#d4b16f] px-9 py-4 text-center text-lg font-bold text-black transition hover:bg-[#e2c486]"
               >
                 Book Now
-              </a>
+              </Link>
 
               <a
                 href="#rooms"
@@ -220,22 +218,13 @@ export default function Home() {
                 className="overflow-hidden rounded-3xl border border-white/10 bg-white/5"
               >
                 <div className="relative h-64">
-                  <Image
-                    src={room.image}
-                    alt={room.name}
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={room.image} alt={room.name} fill className="object-cover" />
                 </div>
 
                 <div className="p-7">
                   <h3 className="text-2xl font-bold">{room.name}</h3>
-                  <p className="mt-2 font-semibold text-[#d4b16f]">
-                    {room.price}
-                  </p>
-                  <p className="mt-4 leading-7 text-gray-400">
-                    {room.description}
-                  </p>
+                  <p className="mt-2 font-semibold text-[#d4b16f]">{room.price}</p>
+                  <p className="mt-4 leading-7 text-gray-400">{room.description}</p>
                 </div>
               </article>
             ))}
@@ -297,9 +286,7 @@ export default function Home() {
                 <p className="text-sm font-bold uppercase tracking-widest text-[#d4b16f]">
                   Sample review
                 </p>
-                <p className="mt-5 text-lg leading-8 text-gray-300">
-                  “{testimonial.text}”
-                </p>
+                <p className="mt-5 text-lg leading-8 text-gray-300">“{testimonial.text}”</p>
                 <p className="mt-7 font-bold">{testimonial.name}</p>
               </article>
             ))}
@@ -320,8 +307,7 @@ export default function Home() {
               Choose the stay that suits you
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-gray-400">
-              Rates may vary according to room availability, number of guests
-              and selected services.
+              Rates may vary according to room availability, number of guests and selected services.
             </p>
           </div>
 
@@ -344,9 +330,7 @@ export default function Home() {
                 <h3 className="text-2xl font-bold">{item.name}</h3>
 
                 <div className="mt-7 flex items-end gap-2">
-                  <span className="text-5xl font-bold text-[#d4b16f]">
-                    {item.price}
-                  </span>
+                  <span className="text-5xl font-bold text-[#d4b16f]">{item.price}</span>
                   <span className="pb-1 text-gray-400">{item.period}</span>
                 </div>
 
@@ -381,9 +365,7 @@ export default function Home() {
             <p className="text-sm font-bold tracking-[0.3em] text-[#d4b16f]">
               FREQUENTLY ASKED QUESTIONS
             </p>
-            <h2 className="mt-4 text-4xl font-bold md:text-5xl">
-              Before you book
-            </h2>
+            <h2 className="mt-4 text-4xl font-bold md:text-5xl">Before you book</h2>
           </div>
 
           <div className="mt-14 space-y-4">
@@ -402,20 +384,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section
-        id="contact"
-        className="px-6 pb-24 md:px-12 lg:px-16"
-      >
+      <section id="contact" className="px-6 pb-24 md:px-12 lg:px-16">
         <div className="mx-auto max-w-7xl rounded-[2rem] bg-[#d4b16f] px-8 py-16 text-center text-black md:px-16">
-          <p className="text-sm font-bold tracking-[0.3em]">
-            GODMILL CITY GUESTHOUSE
-          </p>
+          <p className="text-sm font-bold tracking-[0.3em]">GODMILL CITY GUESTHOUSE</p>
           <h2 className="mx-auto mt-4 max-w-3xl text-4xl font-bold md:text-5xl">
             Ready to reserve your room?
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-black/75">
-            Contact us today to confirm room availability and secure your stay
-            at Godmill City Guesthouse.
+            Contact us today to confirm room availability and secure your stay at Godmill City Guesthouse.
           </p>
 
           <div className="mt-9 flex flex-col justify-center gap-4 sm:flex-row">
@@ -426,12 +402,12 @@ export default function Home() {
               Call 079 058 2637
             </a>
 
-            <a
-              href="https://wa.me/27790582637"
+            <Link
+              href="/booking"
               className="rounded-full border border-black px-9 py-4 font-bold transition hover:bg-black hover:text-white"
             >
-              Book on WhatsApp
-            </a>
+              Book online
+            </Link>
           </div>
         </div>
       </section>
@@ -439,89 +415,6 @@ export default function Home() {
       <footer className="border-t border-white/10 px-6 py-8 text-center text-sm text-gray-500">
         © 2026 Godmill City Guesthouse. All rights reserved.
       </footer>
-    </main>
-  );
-}
-
-        <div className="absolute inset-0 bg-black/60"></div>
-
-        <nav className="absolute top-0 z-20 flex w-full items-center justify-between px-16 py-8">
-
-          <Image
-            src="/logo.png"
-            alt="Godmill"
-            width={240}
-            height={80}
-          />
-
-          <div className="flex gap-10 text-lg">
-
-            <a href="#">Home</a>
-
-            <a href="#">Rooms</a>
-
-            <a href="#">Gallery</a>
-
-            <a href="#">Pool</a>
-
-            <a href="#">Contact</a>
-
-          </div>
-
-        </nav>
-
-        <div className="absolute inset-0 flex items-center">
-
-          <div className="mx-auto max-w-7xl px-16">
-
-            <p className="mb-5 text-lg tracking-[0.5em] text-[#d4b16f]">
-              PREMIUM ACCOMMODATION
-            </p>
-
-            <h1 className="max-w-5xl text-7xl font-bold leading-tight">
-
-              Experience
-              <br />
-
-              Godmill City
-              <br />
-
-              Guesthouse
-
-            </h1>
-
-            <p className="mt-8 max-w-2xl text-2xl text-gray-200">
-
-              Executive • Standard • Family Rooms
-
-              <br />
-
-              Swimming Pool • Free WiFi • Secure Parking
-
-            </p>
-
-            <div className="mt-12 flex gap-6">
-
-              <button className="rounded-full bg-[#d4b16f] px-10 py-5 text-lg font-bold text-black">
-
-                Book Now
-
-              </button>
-
-              <button className="rounded-full border border-white px-10 py-5">
-
-                View Rooms
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
     </main>
   );
 }

@@ -31,12 +31,3 @@ button,
 summary {
   outline-offset: 4px;
 }
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
