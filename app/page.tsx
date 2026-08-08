@@ -7,21 +7,21 @@ const rooms = [
     price: "From R850 per night",
     description:
       "A spacious premium room designed for comfort, privacy and a relaxing stay.",
-    image: "/hero.jpg",
+    image: "/Room 1.jpeg",
   },
   {
     name: "Standard Room",
     price: "From R500 per night",
     description:
       "Clean, comfortable accommodation with everything needed for a pleasant visit.",
-    image: "/hero.jpg",
+    image: "/Room 2.jpeg",
   },
   {
     name: "Family Room",
     price: "Contact us for rates",
     description:
       "A practical and welcoming room option for families and travelling groups.",
-    image: "/hero.jpg",
+    image: "/Room 3.jpeg",
   },
 ];
 
@@ -120,7 +120,7 @@ export default function Home() {
     <main className="bg-[#080808] text-white">
       <section id="home" className="relative min-h-screen overflow-hidden">
         <Image
-          src="/hero.jpg"
+          src="/hero.jpeg"
           alt="Godmill City Guesthouse"
           fill
           priority

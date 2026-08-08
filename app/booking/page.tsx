@@ -5,7 +5,6 @@ import { type ChangeEvent, type FormEvent, useState } from "react";
 import BookingForm from "../components/booking/BookingForm";
 import BookingSummary from "../components/booking/BookingSummary";
 import type { BookingErrors, BookingFormState } from "../components/booking/types";
-import { supabase } from "../../lib/supabase";
 
 const initialForm: BookingFormState = {
   checkIn: "",
@@ -107,53 +106,34 @@ export default function BookingPage() {
     setFeedback(null);
 
     try {
-      const adults = Number(form.adults);
-      const children = Number(form.children || 0);
-      const checkIn = new Date(form.checkIn);
-      const checkOut = new Date(form.checkOut);
-      const nights = Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
-
-      const roomRate =
-        form.roomType === "Standard Double" || form.roomType === "Family 3 Sleeper"
-          ? form.aircon === "Non-Aircon"
-            ? form.roomType === "Standard Double"
-              ? 500
-              : 750
-            : form.roomType === "Standard Double"
-              ? 600
-              : 850
-          : 750;
-
-      const roomTotal = nights * roomRate;
-      const breakfastTotal = form.breakfast ? (adults + children) * 120 : 0;
-      const grandTotal = roomTotal + breakfastTotal;
-      const bookingReference = `GMC-${Date.now().toString().slice(-6)}`;
-
-      const { error } = await supabase.from("Bookings").insert({
-        booking_reference: bookingReference,
-        guest_name: form.guestName.trim(),
-        phone: form.phone.trim(),
-        email: form.email.trim(),
-        room_type: form.roomType,
-        aircon: form.roomType === "Executive Room" ? "Aircon" : form.aircon,
-        adults,
-        children,
-        breakfast: form.breakfast,
-        check_in: form.checkIn,
-        check_out: form.checkOut,
-        nights,
-        room_total: roomTotal,
-        breakfast_total: breakfastTotal,
-        grand_total: grandTotal,
-        status: "Pending",
+      const response = await fetch("/api/booking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          checkIn: form.checkIn,
+          checkOut: form.checkOut,
+          adults: form.adults,
+          children: form.children,
+          roomType: form.roomType,
+          aircon: form.aircon,
+          breakfast: form.breakfast,
+          guestName: form.guestName,
+          email: form.email,
+          phone: form.phone,
+          specialRequests: form.specialRequests,
+        }),
       });
 
-      if (error) {
-        throw error;
+      const result = (await response.json()) as { success?: boolean; bookingReference?: string; errors?: Record<string, string>; message?: string };
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Booking submission failed.");
       }
 
       setSubmitted(true);
-      setFeedback(`Booking submitted successfully. Reference: ${bookingReference}`);
+      setFeedback(`Booking submitted successfully. Reference: ${result.bookingReference}`);
     } catch (error) {
       console.error(error);
       setSubmitted(false);
