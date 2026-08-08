@@ -1,37 +1,47 @@
 import Image from "next/image";
+import Link from "next/link";
 
 const rooms = [
   {
     title: "Executive Room",
     image: "/Room 1.jpeg",
     price: "From R750 / night",
-    description:
-      "Luxury executive room with premium comfort and modern amenities.",
+    features: [
+      "Free WiFi",
+      "Smart TV",
+      "Air Conditioning",
+      "Private Bathroom",
+    ],
   },
   {
     title: "Standard Room",
     image: "/Room 2.jpeg",
     price: "From R500 / night",
-    description:
-      "Comfortable room ideal for business and leisure travellers.",
+    features: [
+      "Free WiFi",
+      "Comfortable Bed",
+      "Private Bathroom",
+      "Work Desk",
+    ],
   },
   {
     title: "Family Room",
     image: "/Room 3.jpeg",
     price: "From R850 / night",
-    description:
-      "Spacious family accommodation with everything you need.",
+    features: [
+      "3 Sleeper",
+      "Free WiFi",
+      "Air Conditioning",
+      "Private Bathroom",
+    ],
   },
 ];
 
 export default function RoomsSection() {
   return (
-    <section
-      id="rooms"
-      className="bg-[#080808] py-24"
-    >
+    <section id="rooms" className="bg-[#080808] py-24">
       <div className="mx-auto max-w-7xl px-8">
-        <p className="tracking-[0.3em] text-[#d4b16f] uppercase">
+        <p className="uppercase tracking-[0.3em] text-[#d4b16f]">
           Our Rooms
         </p>
 
@@ -43,13 +53,14 @@ export default function RoomsSection() {
           {rooms.map((room) => (
             <div
               key={room.title}
-              className="overflow-hidden rounded-3xl bg-[#121212]"
+              className="overflow-hidden rounded-3xl bg-[#121212] shadow-xl transition duration-300 hover:-translate-y-2"
             >
               <div className="relative h-72">
                 <Image
                   src={room.image}
                   alt={room.title}
                   fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
                   className="object-cover"
                 />
               </div>
@@ -59,17 +70,22 @@ export default function RoomsSection() {
                   {room.title}
                 </h3>
 
-                <p className="mt-2 text-[#d4b16f]">
+                <p className="mt-2 text-lg font-semibold text-[#d4b16f]">
                   {room.price}
                 </p>
 
-                <p className="mt-5 text-gray-400">
-                  {room.description}
-                </p>
+                <ul className="mt-6 space-y-2 text-gray-300">
+                  {room.features.map((feature) => (
+                    <li key={feature}>✓ {feature}</li>
+                  ))}
+                </ul>
 
-                <button className="mt-8 rounded-full bg-[#d4b16f] px-6 py-3 font-semibold text-black hover:scale-105 transition">
+                <Link
+                  href="/booking"
+                  className="mt-8 inline-block rounded-full bg-[#d4b16f] px-6 py-3 font-semibold text-black transition hover:scale-105"
+                >
                   Book this Room
-                </button>
+                </Link>
               </div>
             </div>
           ))}
