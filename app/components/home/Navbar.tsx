@@ -9,7 +9,7 @@ export default function Navbar() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-10">
         <Link href="/" className="flex items-center">
           <Image
-            src="/logo.png"
+            src="/logo.png.jpeg"
             alt="Godmill City Guesthouse"
             width={180}
             height={60}
