@@ -1,313 +1,583 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../../../lib/supabase/client";
-import type { BookingRecord } from "../../../lib/supabase-types";
-import AdminShell from "../../components/admin/AdminShell";
-import BookingDetailsModal from "../../components/admin/BookingDetailsModal";
-import BookingTable from "../../components/admin/BookingTable";
+import { useEffect, useState } from "react";
 
-function normalizeStatus(value: string | null | undefined) {
-  const normalized = (value ?? "pending")
-    .toLowerCase()
-    .replace("_", " ");
-
-  if (normalized === "checked in") return "Checked In";
-  if (normalized === "checked out") return "Checked Out";
-  if (normalized === "pending") return "Pending";
-  if (normalized === "confirmed") return "Confirmed";
-  if (normalized === "cancelled") return "Cancelled";
-
-  return value ?? "Pending";
+interface Room {
+  id: string;
+  room_number: string;
+  room_type: string;
+  status: string;
 }
 
-export default function AdminBookingsPage() {
-  const [bookings, setBookings] = useState<BookingRecord[]>([]);
+interface Booking {
+  id: string;
+  booking_reference: string;
+  guest_name: string;
+  phone: string;
+  email: string;
+  room_id: string | null;
+  room_type: string;
+  aircon: boolean;
+  adults: number;
+  children: number;
+  breakfast: boolean;
+  check_in: string;
+  check_out: string;
+  nights: number;
+  room_total: number;
+  breakfast_total: number;
+  grand_total: number;
+  special_requests: string;
+  status: string;
+  created_at: string;
+  rooms: Room | null;
+}
+
+type BookingAction =
+  | "confirm"
+  | "check-in"
+  | "check-out"
+  | "cancel";
+
+export default function BookingsPage() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [roomFilter, setRoomFilter] = useState("All");
-  const [dateFilter, setDateFilter] = useState("");
-
-  const [selectedBooking, setSelectedBooking] =
-    useState<BookingRecord | null>(null);
-
-  const [modalOpen, setModalOpen] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadBookings() {
-      try {
-        setLoading(true);
-        setLoadError(null);
-
-        console.log("Loading bookings from Supabase...");
-
-        const { data, error } = await supabase
-          .from("bookings")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (!active) return;
-
-        if (error) {
-          console.error("SUPABASE BOOKINGS ERROR:", error);
-          setLoadError(error.message);
-          setBookings([]);
-          return;
-        }
-
-        console.log("Bookings loaded:", data);
-
-        setBookings((data ?? []) as BookingRecord[]);
-      } catch (error) {
-        console.error("BOOKINGS FETCH ERROR:", error);
-
-        if (!active) return;
-
-        setLoadError(
-          error instanceof Error
-            ? error.message
-            : "Unable to load bookings."
-        );
-
-        setBookings([]);
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadBookings();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const roomOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          bookings
-            .map((booking) => booking.room_type)
-            .filter(Boolean)
-        )
-      ),
-    [bookings]
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(
+    null
   );
 
-  const filteredBookings = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-
-    return bookings.filter((booking) => {
-      const matchesSearch =
-        !term ||
-        booking.guest_name?.toLowerCase().includes(term) ||
-        booking.phone?.toLowerCase().includes(term) ||
-        booking.booking_reference?.toLowerCase().includes(term);
-
-      const matchesStatus =
-        statusFilter === "All" ||
-        normalizeStatus(booking.status) === statusFilter;
-
-      const matchesRoom =
-        roomFilter === "All" ||
-        booking.room_type === roomFilter;
-
-      const matchesDate =
-        !dateFilter ||
-        booking.check_in === dateFilter ||
-        booking.check_out === dateFilter;
-
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesRoom &&
-        matchesDate
-      );
-    });
-  }, [
-    bookings,
-    searchTerm,
-    statusFilter,
-    roomFilter,
-    dateFilter,
-  ]);
-
-  const handleViewBooking = (booking: BookingRecord) => {
-    setSelectedBooking(booking);
-    setModalOpen(true);
-  };
-
-  const handleStatusChange = async (
-    bookingId: string,
-    status: string
-  ) => {
+  async function loadBookings() {
     try {
-      const updatedStatus = normalizeStatus(status);
+      setLoading(true);
+      setError("");
 
-      const databaseStatus = updatedStatus
-        .toLowerCase()
-        .replace(" ", "_");
+      const response = await fetch("/api/admin/bookings", {
+        cache: "no-store",
+      });
 
-      const { error } = await supabase
-        .from("bookings")
-        .update({
-          status: databaseStatus,
-        })
-        .eq("id", bookingId);
+      const result = await response.json();
 
-      if (error) {
-        console.error("STATUS UPDATE ERROR:", error);
-        alert(`Could not update booking: ${error.message}`);
-        return;
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Unable to load bookings."
+        );
       }
 
-      setBookings((previous) =>
-        previous.map((booking) =>
-          booking.id === bookingId
-            ? {
-                ...booking,
-                status: databaseStatus,
-              }
-            : booking
-        )
+      setBookings(result.bookings ?? []);
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to load bookings."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  async function handleAction(
+    booking: Booking,
+    action: BookingAction
+  ) {
+    const actionNames: Record<BookingAction, string> = {
+      confirm: "confirm",
+      "check-in": "check in",
+      "check-out": "check out",
+      cancel: "cancel",
+    };
+
+    if (
+      action === "cancel" &&
+      !window.confirm(
+        `Cancel booking ${booking.booking_reference}?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setUpdatingId(booking.id);
+      setMessage("");
+      setError("");
+
+      const response = await fetch(
+        "/api/admin/bookings/status",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            action,
+          }),
+        }
       );
 
-      setSelectedBooking((previous) =>
-        previous && previous.id === bookingId
-          ? {
-              ...previous,
-              status: databaseStatus,
-            }
-          : previous
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message ||
+            `Unable to ${actionNames[action]} booking.`
+        );
+      }
+
+      setMessage(
+        `${booking.booking_reference} updated successfully.`
       );
-    } catch (error) {
-      console.error("STATUS UPDATE FAILED:", error);
+
+      await loadBookings();
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to update booking."
+      );
+    } finally {
+      setUpdatingId(null);
     }
-  };
+  }
+
+  function statusStyle(status: string) {
+    switch (status.toLowerCase()) {
+      case "confirmed":
+        return "border-blue-500/30 bg-blue-500/15 text-blue-400";
+
+      case "checked-in":
+      case "occupied":
+        return "border-emerald-500/30 bg-emerald-500/15 text-emerald-400";
+
+      case "checked-out":
+      case "completed":
+        return "border-gray-500/30 bg-gray-500/15 text-gray-300";
+
+      case "cancelled":
+        return "border-red-500/30 bg-red-500/15 text-red-400";
+
+      default:
+        return "border-amber-500/30 bg-amber-500/15 text-amber-400";
+    }
+  }
+
+  function formatMoney(amount: number) {
+    return new Intl.NumberFormat("en-ZA", {
+      style: "currency",
+      currency: "ZAR",
+      minimumFractionDigits: 0,
+    }).format(Number(amount || 0));
+  }
+
+  function formatDate(date: string) {
+    if (!date) {
+      return "—";
+    }
+
+    return new Date(`${date}T00:00:00`).toLocaleDateString(
+      "en-ZA",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }
+    );
+  }
+
+  function getLocalDateString() {
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+
+  function canCheckIn(booking: Booking) {
+    return getLocalDateString() >= booking.check_in;
+  }
+
+  function renderActions(booking: Booking) {
+    const working = updatingId === booking.id;
+
+    if (!booking.room_id) {
+      return (
+        <span className="text-xs text-amber-400">
+          Room not assigned
+        </span>
+      );
+    }
+
+    if (booking.status === "pending") {
+      return (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={working}
+            onClick={() =>
+              handleAction(booking, "confirm")
+            }
+            className="rounded-full bg-[#d4b16f] px-4 py-2 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {working ? "Updating..." : "Confirm"}
+          </button>
+
+          <button
+            type="button"
+            disabled={working}
+            onClick={() =>
+              handleAction(booking, "cancel")
+            }
+            className="rounded-full border border-red-500/40 px-4 py-2 text-xs font-semibold text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Cancel
+          </button>
+        </div>
+      );
+    }
+
+    if (booking.status === "confirmed") {
+      const checkInAllowed = canCheckIn(booking);
+
+      return (
+        <div className="flex flex-wrap items-center gap-2">
+          {checkInAllowed ? (
+            <button
+              type="button"
+              disabled={working}
+              onClick={() =>
+                handleAction(booking, "check-in")
+              }
+              className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {working ? "Updating..." : "Check In"}
+            </button>
+          ) : (
+            <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-xs font-semibold text-blue-300">
+              Check-in available {formatDate(booking.check_in)}
+            </span>
+          )}
+
+          <button
+            type="button"
+            disabled={working}
+            onClick={() =>
+              handleAction(booking, "cancel")
+            }
+            className="rounded-full border border-red-500/40 px-4 py-2 text-xs font-semibold text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Cancel
+          </button>
+        </div>
+      );
+    }
+
+    if (booking.status === "checked-in") {
+      return (
+        <button
+          type="button"
+          disabled={working}
+          onClick={() =>
+            handleAction(booking, "check-out")
+          }
+          className="rounded-full bg-blue-500 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {working ? "Updating..." : "Check Out"}
+        </button>
+      );
+    }
+
+    if (booking.status === "checked-out") {
+      return (
+        <span className="text-xs text-gray-400">
+          Awaiting cleaning
+        </span>
+      );
+    }
+
+    if (booking.status === "cancelled") {
+      return (
+        <span className="text-xs text-red-400">
+          Cancelled
+        </span>
+      );
+    }
+
+    return (
+      <span className="text-xs text-gray-500">
+        No action
+      </span>
+    );
+  }
+
+  const totalValue = bookings
+    .filter((booking) => booking.status !== "cancelled")
+    .reduce(
+      (total, booking) =>
+        total + Number(booking.grand_total || 0),
+      0
+    );
 
   return (
-    <AdminShell
-      title="Bookings"
-      subtitle="Manage reservations and guest stays"
-    >
-      <div className="space-y-6">
-        <div className="rounded-[2rem] border border-white/10 bg-[#101010] p-8">
-          <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr]">
-            <div>
-              <h2 className="text-3xl font-semibold text-white">
-                All bookings
-              </h2>
+    <main className="min-h-screen bg-[#070707] px-6 py-10 text-white md:px-10 lg:px-14">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[#d4b16f]">
+              Godmill Hotel Management
+            </p>
 
-              <p className="mt-3 max-w-xl text-gray-400">
-                Search, filter, and update reservation status from
-                the live records.
-              </p>
-            </div>
+            <h1 className="mt-3 text-4xl font-bold md:text-5xl">
+              Bookings Management
+            </h1>
 
-            <div className="grid gap-3 md:grid-cols-3">
-              <input
-                value={searchTerm}
-                onChange={(event) =>
-                  setSearchTerm(event.target.value)
-                }
-                placeholder="Search guest or booking"
-                className="rounded-2xl border border-white/10 bg-[#0f0f0f] px-4 py-3 text-sm text-white outline-none focus:border-[#d4b16f]"
-              />
+            <p className="mt-3 text-gray-400">
+              View and manage all guest reservations.
+            </p>
+          </div>
 
-              <select
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(event.target.value)
-                }
-                className="rounded-2xl border border-white/10 bg-[#0f0f0f] px-4 py-3 text-sm text-white outline-none"
-              >
-                <option value="All">All statuses</option>
-                <option value="Pending">Pending</option>
-                <option value="Confirmed">Confirmed</option>
-                <option value="Checked In">Checked In</option>
-                <option value="Checked Out">
-                  Checked Out
-                </option>
-                <option value="Cancelled">Cancelled</option>
-              </select>
+          <a
+            href="/booking"
+            className="inline-flex items-center justify-center rounded-full bg-[#d4b16f] px-6 py-3 font-semibold text-black transition hover:opacity-90"
+          >
+            + New Booking
+          </a>
+        </div>
 
-              <select
-                value={roomFilter}
-                onChange={(event) =>
-                  setRoomFilter(event.target.value)
-                }
-                className="rounded-2xl border border-white/10 bg-[#0f0f0f] px-4 py-3 text-sm text-white outline-none"
-              >
-                <option value="All">All rooms</option>
+        {message && (
+          <div className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4 text-emerald-300">
+            {message}
+          </div>
+        )}
 
-                {roomOptions.map((room) => (
-                  <option key={room} value={room}>
-                    {room}
-                  </option>
-                ))}
-              </select>
+        {error && (
+          <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-300">
+            {error}
+          </div>
+        )}
 
-              <input
-                type="date"
-                value={dateFilter}
-                onChange={(event) =>
-                  setDateFilter(event.target.value)
-                }
-                className="rounded-2xl border border-white/10 bg-[#0f0f0f] px-4 py-3 text-sm text-white outline-none md:col-span-3"
-              />
-            </div>
+        <div className="mt-10 grid gap-4 md:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-[#121212] p-5">
+            <p className="text-sm text-gray-400">
+              Total Bookings
+            </p>
+
+            <p className="mt-2 text-3xl font-bold text-[#d4b16f]">
+              {bookings.length}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#121212] p-5">
+            <p className="text-sm text-gray-400">
+              Pending
+            </p>
+
+            <p className="mt-2 text-3xl font-bold text-amber-400">
+              {
+                bookings.filter(
+                  (booking) =>
+                    booking.status === "pending"
+                ).length
+              }
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#121212] p-5">
+            <p className="text-sm text-gray-400">
+              Assigned Rooms
+            </p>
+
+            <p className="mt-2 text-3xl font-bold text-emerald-400">
+              {
+                bookings.filter(
+                  (booking) => booking.room_id
+                ).length
+              }
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#121212] p-5">
+            <p className="text-sm text-gray-400">
+              Booking Value
+            </p>
+
+            <p className="mt-2 text-2xl font-bold text-[#d4b16f]">
+              {formatMoney(totalValue)}
+            </p>
           </div>
         </div>
 
-        {loading && (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-gray-300">
-            Loading live bookings...
-          </div>
-        )}
-
-        {!loading && loadError && (
-          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6">
-            <p className="font-semibold text-red-300">
-              Could not load bookings
-            </p>
-
-            <p className="mt-2 text-sm text-red-200">
-              {loadError}
-            </p>
-          </div>
-        )}
-
-        {!loading && !loadError && (
-          <>
-            <div className="text-sm text-gray-400">
-              {filteredBookings.length} booking
-              {filteredBookings.length === 1 ? "" : "s"} found
+        <div className="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-[#111111]">
+          {loading ? (
+            <div className="p-12 text-center text-gray-400">
+              Loading bookings...
             </div>
+          ) : bookings.length === 0 ? (
+            <div className="p-12 text-center text-gray-400">
+              No bookings found.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1350px]">
+                <thead className="border-b border-white/10 bg-white/[0.02]">
+                  <tr className="text-left text-sm text-gray-400">
+                    <th className="px-6 py-5">
+                      Reference
+                    </th>
 
-            <BookingTable
-              bookings={filteredBookings}
-              onView={handleViewBooking}
-            />
-          </>
-        )}
+                    <th className="px-6 py-5">
+                      Guest
+                    </th>
+
+                    <th className="px-6 py-5">
+                      Room
+                    </th>
+
+                    <th className="px-6 py-5">
+                      Stay
+                    </th>
+
+                    <th className="px-6 py-5">
+                      Guests
+                    </th>
+
+                    <th className="px-6 py-5">
+                      Total
+                    </th>
+
+                    <th className="px-6 py-5">
+                      Status
+                    </th>
+
+                    <th className="px-6 py-5">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {bookings.map((booking) => (
+                    <tr
+                      key={booking.id}
+                      className="border-b border-white/[0.06] transition hover:bg-white/[0.03]"
+                    >
+                      <td className="px-6 py-5">
+                        <p className="font-semibold text-[#d4b16f]">
+                          {booking.booking_reference}
+                        </p>
+
+                        <p className="mt-1 text-xs text-gray-500">
+                          {booking.nights}{" "}
+                          {booking.nights === 1
+                            ? "night"
+                            : "nights"}
+                        </p>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <p className="font-medium">
+                          {booking.guest_name}
+                        </p>
+
+                        <p className="mt-1 text-xs text-gray-500">
+                          {booking.phone}
+                        </p>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        {booking.rooms ? (
+                          <>
+                            <p className="font-semibold">
+                              {booking.rooms.room_number}
+                            </p>
+
+                            <p className="mt-1 text-xs text-gray-500">
+                              {booking.room_type}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-amber-400">
+                              Unassigned
+                            </p>
+
+                            <p className="mt-1 text-xs text-gray-500">
+                              {booking.room_type}
+                            </p>
+                          </>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-5 text-sm">
+                        <p>
+                          {formatDate(
+                            booking.check_in
+                          )}
+                        </p>
+
+                        <p className="mt-1 text-gray-500">
+                          to{" "}
+                          {formatDate(
+                            booking.check_out
+                          )}
+                        </p>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <p>
+                          {booking.adults} adult
+                          {booking.adults !== 1
+                            ? "s"
+                            : ""}
+                        </p>
+
+                        {booking.children > 0 && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            {booking.children} child
+                            {booking.children !== 1
+                              ? "ren"
+                              : ""}
+                          </p>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-5 font-semibold">
+                        {formatMoney(
+                          booking.grand_total
+                        )}
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <span
+                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold capitalize ${statusStyle(
+                            booking.status
+                          )}`}
+                        >
+                          {booking.status}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        {renderActions(booking)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
-
-      <BookingDetailsModal
-        booking={selectedBooking}
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setSelectedBooking(null);
-        }}
-        onStatusChange={handleStatusChange}
-      />
-    </AdminShell>
+    </main>
   );
 }
