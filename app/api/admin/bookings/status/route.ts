@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "../../../../../lib/supabase/server";
+import { createSupabaseAdminClient } from "../../../../../lib/supabase/admin";
 
 interface StatusPayload {
   bookingId: string;
@@ -33,7 +33,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
 
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
