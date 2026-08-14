@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useState,
+} from "react";
 import BookingForm from "../components/booking/BookingForm";
 import BookingSummary from "../components/booking/BookingSummary";
 import type {
@@ -39,54 +43,86 @@ export default function BookingPage() {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<BookingErrors>({});
   const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+  const [checkingAvailability, setCheckingAvailability] =
+    useState(false);
+
   const [availableRoom, setAvailableRoom] =
     useState<AvailableRoom | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
+
+  const [feedback, setFeedback] =
+    useState<string | null>(null);
 
   const validate = (values: BookingFormState) => {
     const nextErrors: BookingErrors = {};
 
     if (!values.checkIn) {
-      nextErrors.checkIn = "Please select a check-in date.";
+      nextErrors.checkIn =
+        "Please select a check-in date.";
     }
 
     if (!values.checkOut) {
-      nextErrors.checkOut = "Please select a check-out date.";
-    } else if (values.checkIn && values.checkOut <= values.checkIn) {
-      nextErrors.checkOut = "Check-out must be after check-in.";
+      nextErrors.checkOut =
+        "Please select a check-out date.";
+    } else if (
+      values.checkIn &&
+      values.checkOut <= values.checkIn
+    ) {
+      nextErrors.checkOut =
+        "Check-out must be after check-in.";
     }
 
     const adults = Number(values.adults);
 
-    if (!values.adults || Number.isNaN(adults) || adults < 1) {
-      nextErrors.adults = "Please enter at least one adult.";
+    if (
+      !values.adults ||
+      Number.isNaN(adults) ||
+      adults < 1
+    ) {
+      nextErrors.adults =
+        "Please enter at least one adult.";
     }
 
     const children = Number(values.children);
 
-    if (Number.isNaN(children) || children < 0) {
-      nextErrors.children = "Children must be zero or more.";
+    if (
+      Number.isNaN(children) ||
+      children < 0
+    ) {
+      nextErrors.children =
+        "Children must be zero or more.";
     }
 
     if (!values.guestName.trim()) {
-      nextErrors.guestName = "Please enter the guest name.";
+      nextErrors.guestName =
+        "Please enter the guest name.";
     }
 
     if (!values.email.trim()) {
-      nextErrors.email = "Please enter your email address.";
-    } else if (!validateEmail(values.email.trim())) {
-      nextErrors.email = "Please enter a valid email address.";
+      nextErrors.email =
+        "Please enter your email address.";
+    } else if (
+      !validateEmail(values.email.trim())
+    ) {
+      nextErrors.email =
+        "Please enter a valid email address.";
     }
 
     if (!values.phone.trim()) {
-      nextErrors.phone = "Please enter your contact number.";
-    } else if (!validatePhone(values.phone.trim())) {
-      nextErrors.phone = "Please enter a valid phone number.";
+      nextErrors.phone =
+        "Please enter your contact number.";
+    } else if (
+      !validatePhone(values.phone.trim())
+    ) {
+      nextErrors.phone =
+        "Please enter a valid phone number.";
     }
 
-    if (values.roomType !== "Executive Room" && !values.aircon) {
+    if (
+      values.roomType !== "Executive Room" &&
+      !values.aircon
+    ) {
       nextErrors.aircon =
         "Please choose an air-conditioning option.";
     }
@@ -96,13 +132,16 @@ export default function BookingPage() {
 
   const handleChange = (
     event: ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement
     >
   ) => {
     const { name, value, type } = event.target;
 
     if (type === "checkbox") {
-      const checkbox = event.target as HTMLInputElement;
+      const checkbox =
+        event.target as HTMLInputElement;
 
       setForm((current) => ({
         ...current,
@@ -125,67 +164,87 @@ export default function BookingPage() {
     setSubmitted(false);
   };
 
-  const checkAvailability = async (): Promise<AvailableRoom | null> => {
-    setCheckingAvailability(true);
+  const checkAvailability =
+    async (): Promise<AvailableRoom | null> => {
+      setCheckingAvailability(true);
 
-    try {
-      const response = await fetch("/api/availability", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          roomType: form.roomType,
-          aircon: form.aircon,
-          checkIn: form.checkIn,
-          checkOut: form.checkOut,
-        }),
-      });
+      try {
+        const response = await fetch(
+          "/api/availability",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              roomType: form.roomType,
+              aircon: form.aircon,
+              checkIn: form.checkIn,
+              checkOut: form.checkOut,
+            }),
+          }
+        );
 
-      const result = (await response.json()) as {
-        success?: boolean;
-        room?: AvailableRoom;
-        message?: string;
-      };
+        const result =
+          (await response.json()) as {
+            success?: boolean;
+            room?: AvailableRoom;
+            message?: string;
+          };
 
-      if (!response.ok || !result.success || !result.room) {
+        if (
+          !response.ok ||
+          !result.success ||
+          !result.room
+        ) {
+          setAvailableRoom(null);
+
+          setFeedback(
+            result.message ||
+              "No rooms are available for the selected dates."
+          );
+
+          return null;
+        }
+
+        setAvailableRoom(result.room);
+
+        return result.room;
+      } catch (error) {
+        console.error(
+          "Availability check failed:",
+          error
+        );
+
         setAvailableRoom(null);
+
         setFeedback(
-          result.message ||
-            "No rooms are available for the selected dates."
+          "We could not check room availability right now."
         );
 
         return null;
+      } finally {
+        setCheckingAvailability(false);
       }
+    };
 
-      setAvailableRoom(result.room);
-
-      return result.room;
-    } catch (error) {
-      console.error("Availability check failed:", error);
-
-      setAvailableRoom(null);
-      setFeedback(
-        "We could not check room availability right now."
-      );
-
-      return null;
-    } finally {
-      setCheckingAvailability(false);
-    }
-  };
-
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (
+    event: FormEvent
+  ) => {
     event.preventDefault();
 
     const nextErrors = validate(form);
     setErrors(nextErrors);
 
-    if (Object.keys(nextErrors).length > 0) {
+    if (
+      Object.keys(nextErrors).length > 0
+    ) {
       setSubmitted(false);
+
       setFeedback(
         "Please complete the highlighted fields before submitting."
       );
+
       return;
     }
 
@@ -193,65 +252,169 @@ export default function BookingPage() {
     setFeedback(null);
 
     try {
-      const room = await checkAvailability();
+      const room =
+        await checkAvailability();
 
       if (!room) {
         setSubmitted(false);
         return;
       }
 
-      const response = await fetch("/api/booking", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          roomId: room.id,
-          checkIn: form.checkIn,
-          checkOut: form.checkOut,
-          adults: form.adults,
-          children: form.children,
-          roomType: form.roomType,
-          aircon: form.aircon,
-          breakfast: form.breakfast,
-          guestName: form.guestName,
-          email: form.email,
-          phone: form.phone,
-          specialRequests: form.specialRequests,
-        }),
-      });
+      // -----------------------------------------
+      // CREATE GODMILL BOOKING
+      // -----------------------------------------
 
-      const result = (await response.json()) as {
-        success?: boolean;
-        bookingReference?: string;
-        errors?: Record<string, string>;
-        message?: string;
-      };
+      const response = await fetch(
+        "/api/booking",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            roomId: room.id,
+            checkIn: form.checkIn,
+            checkOut: form.checkOut,
+            adults: form.adults,
+            children: form.children,
+            roomType: form.roomType,
+            aircon: form.aircon,
+            breakfast: form.breakfast,
+            guestName: form.guestName,
+            email: form.email,
+            phone: form.phone,
+            specialRequests:
+              form.specialRequests,
+          }),
+        }
+      );
 
-      if (!response.ok || !result.success) {
+      const result =
+        (await response.json()) as {
+          success?: boolean;
+
+          bookingReference?: string;
+
+          booking?: {
+            id: string;
+            booking_reference: string;
+            grand_total: number;
+          };
+
+          pricing?: {
+            grandTotal: number;
+          };
+
+          errors?: Record<
+            string,
+            string
+          >;
+
+          message?: string;
+        };
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
         throw new Error(
-          result.message || "Booking submission failed."
+          result.message ||
+            "Booking submission failed."
+        );
+      }
+
+      if (
+        !result.booking?.id ||
+        !result.bookingReference ||
+        !result.pricing?.grandTotal
+      ) {
+        throw new Error(
+          "Booking was created, but payment information is incomplete."
         );
       }
 
       setSubmitted(true);
 
-      const roomText = room.room_number
-        ? ` Room: ${room.room_number}.`
-        : "";
+      const roomText =
+        room.room_number
+          ? ` Room: ${room.room_number}.`
+          : "";
 
       setFeedback(
-        `Booking submitted successfully. Reference: ${result.bookingReference}.${roomText}`
+        `Booking created successfully. Reference: ${result.bookingReference}.${roomText} Redirecting to secure payment...`
       );
-    } catch (error) {
-      console.error("Booking submission failed:", error);
 
-      setSubmitted(false);
+      // -----------------------------------------
+      // CREATE YOCO CHECKOUT
+      // -----------------------------------------
+
+      const checkoutResponse =
+        await fetch(
+          "/api/yoco/checkout",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              bookingId:
+                result.booking.id,
+
+              bookingReference:
+                result.bookingReference,
+
+              amount:
+                result.pricing
+                  .grandTotal,
+            }),
+          }
+        );
+
+      const checkoutResult =
+        (await checkoutResponse.json()) as {
+          success?: boolean;
+          checkoutId?: string;
+          redirectUrl?: string;
+          status?: string;
+          message?: string;
+        };
+
+      if (
+        !checkoutResponse.ok ||
+        !checkoutResult.success
+      ) {
+        throw new Error(
+          checkoutResult.message ||
+            "Booking was created, but the payment page could not be opened."
+        );
+      }
+
+      if (
+        !checkoutResult.redirectUrl
+      ) {
+        throw new Error(
+          "Booking was created, but Yoco did not return a payment link."
+        );
+      }
+
+      // -----------------------------------------
+      // REDIRECT CUSTOMER TO YOCO
+      // -----------------------------------------
+
+      window.location.href =
+        checkoutResult.redirectUrl;
+    } catch (error) {
+      console.error(
+        "Booking/payment failed:",
+        error
+      );
 
       setFeedback(
         error instanceof Error
           ? error.message
-          : "We could not save your booking right now."
+          : "We could not complete your booking payment."
       );
     } finally {
       setIsSubmitting(false);
@@ -262,7 +425,9 @@ export default function BookingPage() {
     const nextErrors = validate(form);
     setErrors(nextErrors);
 
-    if (Object.keys(nextErrors).length === 0) {
+    if (
+      Object.keys(nextErrors).length === 0
+    ) {
       const message = [
         `Guest Name: ${form.guestName}`,
         `Check-in: ${form.checkIn}`,
@@ -271,15 +436,21 @@ export default function BookingPage() {
         `Aircon: ${form.aircon}`,
         `Adults: ${form.adults}`,
         `Children: ${form.children}`,
-        `Breakfast: ${form.breakfast ? "Yes" : "No"}`,
+        `Breakfast: ${
+          form.breakfast
+            ? "Yes"
+            : "No"
+        }`,
         `Email: ${form.email}`,
         `Phone: ${form.phone}`,
         `Special Requests: ${
-          form.specialRequests || "None"
+          form.specialRequests ||
+          "None"
         }`,
       ].join("\n");
 
-      const encoded = encodeURIComponent(message);
+      const encoded =
+        encodeURIComponent(message);
 
       window.open(
         `https://wa.me/27790582637?text=${encoded}`,
@@ -323,17 +494,21 @@ export default function BookingPage() {
             </p>
 
             <h1 className="mt-4 text-4xl font-semibold md:text-5xl">
-              Reserve a luxury stay with confidence.
+              Reserve a luxury stay with
+              confidence.
             </h1>
 
             <p className="mt-5 text-lg leading-8 text-gray-300">
-              Choose your dates, room and preferences, then review
-              your booking before sending your request.
+              Choose your dates, room and
+              preferences, then review your
+              booking before sending your
+              request.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4 text-sm text-gray-300">
               <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">
-                Executive, Standard & Family rooms
+                Executive, Standard & Family
+                rooms
               </span>
 
               <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">
@@ -347,7 +522,8 @@ export default function BookingPage() {
 
             {checkingAvailability ? (
               <div className="mt-6 rounded-2xl border border-[#d4b16f]/20 bg-[#d4b16f]/10 px-4 py-3 text-sm text-[#e4c888]">
-                Checking live room availability...
+                Checking live room
+                availability...
               </div>
             ) : null}
 
@@ -376,7 +552,9 @@ export default function BookingPage() {
           {feedback ? (
             <div
               className={`mb-6 rounded-2xl border px-4 py-3 text-sm ${
-                feedback.toLowerCase().includes("success")
+                feedback
+                  .toLowerCase()
+                  .includes("success")
                   ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
                   : "border-amber-500/30 bg-amber-500/10 text-amber-300"
               }`}
@@ -392,7 +570,10 @@ export default function BookingPage() {
             onSubmit={handleSubmit}
             onWhatsApp={handleWhatsApp}
             submitted={submitted}
-            isSubmitting={isSubmitting || checkingAvailability}
+            isSubmitting={
+              isSubmitting ||
+              checkingAvailability
+            }
           />
         </div>
       </section>
