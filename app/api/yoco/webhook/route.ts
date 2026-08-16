@@ -69,44 +69,40 @@ function verifyYocoWebhook(
   //    Check all v1 signatures.
   // --------------------------------------------------
 
+    // Yoco webhook-signature can contain one or more
+  // space-separated version/signature pairs, for example:
+  // v1,<signature> v1,<signature>
+
   const signatures = webhookSignature
-    .split(" ")
+    .split(/\s+/)
     .map((entry) => entry.trim())
     .filter(Boolean);
 
   for (const entry of signatures) {
-    const commaIndex = entry.indexOf(",");
-
-    if (commaIndex === -1) {
-      continue;
-    }
-
-    const version = entry.slice(0, commaIndex);
-    const signature = entry.slice(commaIndex + 1);
+    const [version, ...signatureParts] = entry.split(",");
+    const signature = signatureParts.join(",");
 
     if (version !== "v1" || !signature) {
       continue;
     }
 
-    const expectedBuffer = Buffer.from(expectedSignature);
-    const receivedBuffer = Buffer.from(signature);
+    try {
+      const expectedBuffer = Buffer.from(expectedSignature, "utf8");
+      const receivedBuffer = Buffer.from(signature, "utf8");
 
-    if (expectedBuffer.length !== receivedBuffer.length) {
+      if (expectedBuffer.length !== receivedBuffer.length) {
+        continue;
+      }
+
+      if (crypto.timingSafeEqual(expectedBuffer, receivedBuffer)) {
+        return true;
+      }
+    } catch {
       continue;
-    }
-
-    if (
-      crypto.timingSafeEqual(
-        expectedBuffer,
-        receivedBuffer
-      )
-    ) {
-      return true;
     }
   }
 
-  return false;
-}
+  return false;}
 
 export async function POST(request: Request) {
   try {
