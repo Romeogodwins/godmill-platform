@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createSupabaseClient } from "../../../../lib/supabase/client";
 
 interface StatusPayload {
@@ -50,7 +50,7 @@ export async function PATCH(request: Request) {
       const { error: bookingUpdateError } = await supabase
         .from("bookings")
         .update({
-          status: "checked_in",
+          status: "checked-in",
         })
         .eq("id", booking.id);
 
@@ -81,7 +81,7 @@ export async function PATCH(request: Request) {
         .from("bookings")
         .select("id")
         .eq("room_id", payload.roomId)
-        .eq("status", "checked_in")
+        .eq("status", "checked-in")
         .limit(1)
         .maybeSingle();
 

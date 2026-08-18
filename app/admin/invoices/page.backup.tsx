@@ -1,0 +1,801 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { jsPDF } from "jspdf";
+
+interface Payment {
+  id?: string;
+  booking_id?: string;
+  amount?: number;
+  payment_amount?: number;
+  status?: string;
+}
+
+interface Booking {
+  id: string;
+  booking_reference: string;
+  guest_name: string;
+  phone: string;
+  email: string;
+  room_id: string | null;
+  room_type: string;
+  aircon: boolean | null;
+  adults: number;
+  children: number;
+  breakfast: boolean | null;
+  check_in: string;
+  check_out: string;
+  nights: number;
+  room_total: number;
+  breakfast_total: number;
+  grand_total: number;
+  special_requests: string | null;
+  status: string;
+  created_at: string;
+  rooms: {
+    id: string;
+    room_number: string;
+    room_type: string;
+    status: string;
+  } | null;
+  payments?: Payment[];
+}
+
+interface BookingsResponse {
+  success: boolean;
+  bookings: Booking[];
+  message?: string;
+}
+
+interface PaymentsResponse {
+  success?: boolean;
+  payments?: Payment[];
+  message?: string;
+}
+
+function money(value: number) {
+  return `R ${Number(value || 0).toLocaleString("en-ZA", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function dateText(value: string) {
+  if (!value) return "—";
+  return new Date(`${value}T00:00:00`).toLocaleDateString("en-ZA", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function invoiceNumber(booking: Booking) {
+  const date = new Date(booking.created_at);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+
+  return `INV-${y}${m}${d}-${booking.booking_reference.replace("GCM-", "")}`;
+}
+
+function paymentAmount(payment: Payment) {
+  return Number(payment.amount ?? payment.payment_amount ?? 0);
+}
+
+function paidForBooking(booking: Booking, allPayments: Payment[]) {
+  const nestedPayments = Array.isArray(booking.payments) ? booking.payments : [];
+
+  if (nestedPayments.length > 0) {
+    return nestedPayments.reduce((sum, payment) => sum + paymentAmount(payment), 0);
+  }
+
+  return allPayments
+    .filter((payment) => payment.booking_id === booking.id)
+    .reduce((sum, payment) => sum + paymentAmount(payment), 0);
+}
+
+function paymentState(total: number, paid: number) {
+  const balance = Math.max(0, Number(total || 0) - Number(paid || 0));
+
+  if (paid >= total && total > 0) {
+    return { label: "Paid", balance };
+  }
+
+  if (paid > 0) {
+    return { label: "Partially Paid", balance };
+  }
+
+  return { label: "Unpaid", balance };
+}
+
+export default function InvoicesPage() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Booking | null>(null);
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const [bookingsResponse, paymentsResponse] = await Promise.all([
+        fetch("/api/admin/bookings", { cache: "no-store" }),
+        fetch("/api/admin/payments", { cache: "no-store" }),
+      ]);
+
+      const bookingsResult =
+        (await bookingsResponse.json()) as BookingsResponse;
+
+      if (!bookingsResponse.ok || !bookingsResult.success) {
+        throw new Error(
+          bookingsResult.message || "Unable to load bookings."
+        );
+      }
+
+      setBookings(bookingsResult.bookings ?? []);
+
+      if (paymentsResponse.ok) {
+        const paymentsResult =
+          (await paymentsResponse.json()) as PaymentsResponse | Payment[];
+
+        if (Array.isArray(paymentsResult)) {
+          setPayments(paymentsResult);
+        } else {
+          setPayments(
+            Array.isArray(paymentsResult.payments)
+              ? paymentsResult.payments
+              : []
+          );
+        }
+      } else {
+        setPayments([]);
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to load invoices."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return bookings;
+
+    return bookings.filter((booking) =>
+      [
+        booking.booking_reference,
+        booking.guest_name,
+        booking.phone,
+        booking.email,
+        booking.room_type,
+        booking.rooms?.room_number ?? "",
+      ].some((value) => value?.toLowerCase().includes(term))
+    );
+  }, [bookings, search]);
+
+  function getFinancials(booking: Booking) {
+    const paid = paidForBooking(booking, payments);
+    const state = paymentState(booking.grand_total, paid);
+
+    return {
+      paid,
+      balance: state.balance,
+      paymentStatus: state.label,
+    };
+  }
+
+  async function downloadPdf(booking: Booking) {
+  const doc = new jsPDF();
+  const inv = invoiceNumber(booking);
+  const room = booking.rooms?.room_number ?? "Unassigned";
+  const financials = getFinancials(booking);
+
+  // Load Godmill logo from /public/logo.png
+  try {
+    const response = await fetch("/logo.png");
+    const blob = await response.blob();
+
+    const logoData = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+    doc.addImage(logoData, "PNG", 82, 8, 46, 25);
+  } catch (error) {
+    console.error("Unable to load Godmill logo:", error);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text("GODMILL", 105, 20, { align: "center" });
+  }
+
+  // Guesthouse heading
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("Godmill City Guesthouse", 105, 39, {
+    align: "center",
+  });
+
+  doc.setFontSize(17);
+  doc.text("INVOICE", 105, 49, {
+    align: "center",
+  });
+
+  doc.setDrawColor(190);
+  doc.line(20, 55, 190, 55);
+
+  let y = 65;
+
+  const row = (label: string, value: string) => {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.text(label, 20, y);
+
+    doc.setFont("helvetica", "bold");
+    doc.text(value || "-", 190, y, {
+      align: "right",
+    });
+
+    y += 7;
+  };
+
+  // Invoice and guest information
+  row("Invoice Number", inv);
+  row("Booking Reference", booking.booking_reference);
+  row("Guest", booking.guest_name);
+  row("Phone", booking.phone || "-");
+  row("Email", booking.email || "-");
+  row("Room", `${room} - ${booking.room_type}`);
+  row("Check-in", dateText(booking.check_in));
+  row("Check-out", dateText(booking.check_out));
+  row("Nights", String(booking.nights));
+
+  y += 2;
+
+  doc.setDrawColor(220);
+  doc.line(20, y, 190, y);
+
+  y += 8;
+
+  // Charges
+  row("Accommodation", money(booking.room_total));
+  row("Breakfast", money(booking.breakfast_total));
+  row("Total Charged", money(booking.grand_total));
+  row("Amount Paid", money(financials.paid));
+  row("Balance Due", money(financials.balance));
+  row(
+    "Payment Status",
+    financials.paymentStatus.toUpperCase()
+  );
+
+  // Payment status box
+  y += 2;
+
+  doc.setFillColor(247, 244, 237);
+  doc.rect(20, y, 170, 20, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+
+  doc.text(
+    financials.balance === 0
+      ? "PAID IN FULL"
+      : "BALANCE DUE",
+    28,
+    y + 13
+  );
+
+  doc.setFontSize(16);
+
+  doc.text(
+    money(financials.balance),
+    182,
+    y + 13,
+    {
+      align: "right",
+    }
+  );
+
+  // Banking details
+  y += 30;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("BANKING DETAILS", 20, y);
+
+  y += 8;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+
+  doc.text("Bank: FNB", 20, y);
+  doc.text("Account Name: Godmill", 105, y);
+
+  y += 7;
+
+  doc.text(
+    "Account Number: 62836688616",
+    20,
+    y
+  );
+
+  doc.text(
+    "Account Type: Current",
+    105,
+    y
+  );
+
+  y += 7;
+
+  doc.setFont("helvetica", "bold");
+  doc.text(
+    `Payment Reference: ${
+      booking.guest_name ||
+      booking.booking_reference
+    }`,
+    20,
+    y
+  );
+
+  // Footer
+  y += 12;
+
+  doc.setDrawColor(220);
+  doc.line(20, y, 190, y);
+
+  y += 8;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9.5);
+
+  doc.text(
+    "Godmill City Guesthouse",
+    105,
+    y,
+    {
+      align: "center",
+    }
+  );
+
+  y += 6;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+
+  doc.text(
+    "217 Khibitswane, Taung - Cokonyane Road near Boemma Waters",
+    105,
+    y,
+    {
+      align: "center",
+    }
+  );
+
+  y += 5;
+
+  doc.text(
+    "Tel: 079 058 2637",
+    105,
+    y,
+    {
+      align: "center",
+    }
+  );
+
+  doc.save(`${inv}.pdf`);
+}  function printInvoice(booking: Booking) {
+    const inv = invoiceNumber(booking);
+    const room = booking.rooms?.room_number ?? "Unassigned";
+    const financials = getFinancials(booking);
+    const w = window.open("", "_blank", "width=850,height=900");
+
+    if (!w) {
+      setError("Please allow pop-ups to print the invoice.");
+      return;
+    }
+
+    w.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${inv}</title>
+        <style>
+          body{font-family:Arial,sans-serif;padding:40px;color:#111}
+          .invoice{max-width:720px;margin:auto;border:1px solid #ddd;padding:40px}
+          .head{text-align:center;border-bottom:2px solid #d4b16f;padding-bottom:20px}
+          h1{color:#b58d45;letter-spacing:2px;margin:0}
+          h2{margin:18px 0 0}
+          .row{display:flex;justify-content:space-between;gap:25px;padding:10px 0;border-bottom:1px solid #eee}
+          .label{color:#666}.value{font-weight:700;text-align:right}
+          .payment{margin-top:20px;border:1px solid #ddd;border-radius:10px;padding:14px 18px}
+          .total{margin-top:20px;padding:20px;background:#f7f4ed;font-size:22px;font-weight:800;display:flex;justify-content:space-between}
+          .footer{text-align:center;color:#666;font-size:13px;line-height:1.7;margin-top:35px}
+          @media print{body{padding:0}.invoice{border:none}}
+        </style>
+      </head>
+      <body>
+        <div class="invoice">
+          <div class="head">
+            <h1>GODMILL</h1>
+            <div>Godmill City Guesthouse</div>
+            <h2>INVOICE</h2>
+          </div>
+
+          <div class="row"><span class="label">Invoice Number</span><span class="value">${inv}</span></div>
+          <div class="row"><span class="label">Booking Reference</span><span class="value">${booking.booking_reference}</span></div>
+          <div class="row"><span class="label">Guest</span><span class="value">${booking.guest_name}</span></div>
+          <div class="row"><span class="label">Room</span><span class="value">${room} - ${booking.room_type}</span></div>
+          <div class="row"><span class="label">Stay</span><span class="value">${dateText(booking.check_in)} - ${dateText(booking.check_out)}</span></div>
+          <div class="row"><span class="label">Nights</span><span class="value">${booking.nights}</span></div>
+          <div class="row"><span class="label">Accommodation</span><span class="value">${money(booking.room_total)}</span></div>
+          <div class="row"><span class="label">Breakfast</span><span class="value">${money(booking.breakfast_total)}</span></div>
+
+          <div class="payment">
+            <div class="row"><span class="label">Total Charged</span><span class="value">${money(booking.grand_total)}</span></div>
+            <div class="row"><span class="label">Amount Paid</span><span class="value">${money(financials.paid)}</span></div>
+            <div class="row"><span class="label">Balance Due</span><span class="value">${money(financials.balance)}</span></div>
+            <div class="row"><span class="label">Payment Status</span><span class="value">${financials.paymentStatus}</span></div>
+          </div>
+
+          <div class="total">
+            <span>${financials.balance === 0 ? "PAID IN FULL" : "BALANCE DUE"}</span>
+            <span>${money(financials.balance)}</span>
+          </div>
+
+          <div class="footer">
+            <strong>Godmill City Guesthouse</strong><br>
+            217 Khibitswane, Taung - Cokonyane Road near Boemma Waters<br>
+            Tel: 079 058 2637
+          </div>
+        </div>
+        <script>window.onload=()=>window.print();</script>
+      </body>
+      </html>
+    `);
+
+    w.document.close();
+  }
+
+  function whatsappInvoice(booking: Booking) {
+    let phone = (booking.phone || "").replace(/\D/g, "");
+    if (phone.startsWith("0")) phone = `27${phone.slice(1)}`;
+
+    if (!phone) {
+      setError("This booking has no guest phone number.");
+      return;
+    }
+
+    const financials = getFinancials(booking);
+
+    const message = [
+      "GODMILL CITY GUESTHOUSE",
+      "INVOICE",
+      "",
+      `Invoice: ${invoiceNumber(booking)}`,
+      `Booking: ${booking.booking_reference}`,
+      `Guest: ${booking.guest_name}`,
+      `Check-in: ${dateText(booking.check_in)}`,
+      `Check-out: ${dateText(booking.check_out)}`,
+      `Nights: ${booking.nights}`,
+      `Accommodation: ${money(booking.room_total)}`,
+      `Breakfast: ${money(booking.breakfast_total)}`,
+      `TOTAL CHARGED: ${money(booking.grand_total)}`,
+      `AMOUNT PAID: ${money(financials.paid)}`,
+      `BALANCE DUE: ${money(financials.balance)}`,
+      `PAYMENT STATUS: ${financials.paymentStatus.toUpperCase()}`,
+      "",
+      "Tel: 079 058 2637",
+      "Godmill City Guesthouse",
+    ].join("\n");
+
+    window.open(
+      `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
+  if (loading && bookings.length === 0) {
+    return (
+      <main className="min-h-screen bg-black p-10 text-white">
+        <p className="text-gray-400">Loading invoices...</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-black text-white">
+      <div className="mx-auto max-w-7xl px-6 py-12 md:px-10">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[#d4b16f]">
+              Godmill Hotel Management
+            </p>
+            <h1 className="mt-3 text-4xl font-bold md:text-5xl">
+              Invoices
+            </h1>
+            <p className="mt-3 text-gray-400">
+              Create, download, print and send booking invoices.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={loadData}
+            className="rounded-full border border-[#d4b16f]/40 px-6 py-3 font-semibold text-[#d4b16f]"
+          >
+            Refresh
+          </button>
+        </div>
+
+        {error && (
+          <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-300">
+            {error}
+          </div>
+        )}
+
+        <div className="mt-8">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search booking, guest, phone, email or room..."
+            className="w-full rounded-2xl border border-white/10 bg-[#121212] px-5 py-4 outline-none placeholder:text-gray-600 focus:border-[#d4b16f]"
+          />
+        </div>
+
+        <div className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-[#111111]">
+          <div className="border-b border-white/10 p-7">
+            <h2 className="text-2xl font-bold">Booking Invoices</h2>
+            <p className="mt-2 text-sm text-gray-500">
+              {filtered.length} booking invoice
+              {filtered.length === 1 ? "" : "s"}
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1100px]">
+              <thead className="bg-black/40 text-left text-sm text-gray-400">
+                <tr>
+                  <th className="px-5 py-5">Invoice</th>
+                  <th className="px-5 py-5">Guest</th>
+                  <th className="px-5 py-5">Room</th>
+                  <th className="px-5 py-5">Stay</th>
+                  <th className="px-5 py-5">Total</th>
+                  <th className="px-5 py-5">Paid</th>
+                  <th className="px-5 py-5">Balance</th>
+                  <th className="px-5 py-5">Status</th>
+                  <th className="px-5 py-5">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filtered.map((booking) => {
+                  const financials = getFinancials(booking);
+
+                  return (
+                    <tr
+                      key={booking.id}
+                      className="border-t border-white/[0.06]"
+                    >
+                      <td className="px-5 py-5">
+                        <p className="font-semibold text-[#d4b16f]">
+                          {invoiceNumber(booking)}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {booking.booking_reference}
+                        </p>
+                      </td>
+
+                      <td className="px-5 py-5">
+                        <p className="font-semibold">
+                          {booking.guest_name}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {booking.phone}
+                        </p>
+                      </td>
+
+                      <td className="px-5 py-5">
+                        <p>
+                          {booking.rooms?.room_number ?? "Unassigned"}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {booking.room_type}
+                        </p>
+                      </td>
+
+                      <td className="px-5 py-5 text-sm">
+                        {dateText(booking.check_in)} —{" "}
+                        {dateText(booking.check_out)}
+                      </td>
+
+                      <td className="px-5 py-5 font-bold">
+                        {money(booking.grand_total)}
+                      </td>
+
+                      <td className="px-5 py-5 font-semibold text-emerald-400">
+                        {money(financials.paid)}
+                      </td>
+
+                      <td className="px-5 py-5 font-semibold text-red-400">
+                        {money(financials.balance)}
+                      </td>
+
+                      <td className="px-5 py-5">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                            financials.paymentStatus === "Paid"
+                              ? "bg-emerald-500/15 text-emerald-400"
+                              : financials.paymentStatus === "Partially Paid"
+                                ? "bg-amber-500/15 text-amber-400"
+                                : "bg-red-500/15 text-red-400"
+                          }`}
+                        >
+                          {financials.paymentStatus}
+                        </span>
+                      </td>
+
+                      <td className="px-5 py-5">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setSelected(booking)}
+                            className="rounded-full border border-white/15 px-4 py-2 text-sm"
+                          >
+                            View
+                          </button>
+
+                          <button
+                            onClick={() => downloadPdf(booking)}
+                            className="rounded-full bg-[#d4b16f] px-4 py-2 text-sm font-semibold text-black"
+                          >
+                            Download PDF
+                          </button>
+
+                          <button
+                            onClick={() => printInvoice(booking)}
+                            className="rounded-full border border-[#d4b16f]/40 px-4 py-2 text-sm text-[#d4b16f]"
+                          >
+                            Print
+                          </button>
+
+                          <button
+                            onClick={() => whatsappInvoice(booking)}
+                            className="rounded-full border border-emerald-500/40 px-4 py-2 text-sm text-emerald-400"
+                          >
+                            WhatsApp
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {filtered.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={9}
+                      className="p-12 text-center text-gray-500"
+                    >
+                      No bookings found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {selected && (() => {
+          const financials = getFinancials(selected);
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+              <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-[#111111] p-7">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.25em] text-[#d4b16f]">
+                      Invoice
+                    </p>
+                    <h2 className="mt-2 text-2xl font-bold">
+                      {invoiceNumber(selected)}
+                    </h2>
+                    <p className="mt-1 text-gray-400">
+                      {selected.guest_name}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setSelected(null)}
+                    className="rounded-full border border-white/10 px-4 py-2"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <div className="mt-7 space-y-3">
+                  {[
+                    ["Booking Reference", selected.booking_reference],
+                    [
+                      "Room",
+                      `${selected.rooms?.room_number ?? "Unassigned"} - ${selected.room_type}`,
+                    ],
+                    ["Check-in", dateText(selected.check_in)],
+                    ["Check-out", dateText(selected.check_out)],
+                    ["Nights", String(selected.nights)],
+                    ["Accommodation", money(selected.room_total)],
+                    ["Breakfast", money(selected.breakfast_total)],
+                    ["Total Charged", money(selected.grand_total)],
+                    ["Amount Paid", money(financials.paid)],
+                    ["Balance Due", money(financials.balance)],
+                    ["Payment Status", financials.paymentStatus],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="flex justify-between gap-5 border-b border-white/10 py-3"
+                    >
+                      <span className="text-gray-400">{label}</span>
+                      <span className="text-right font-semibold">
+                        {value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex items-center justify-between rounded-2xl bg-[#d4b16f]/10 p-5">
+                  <div>
+                    <p className="font-semibold text-[#d4b16f]">
+                      {financials.balance === 0
+                        ? "PAID IN FULL"
+                        : "BALANCE DUE"}
+                    </p>
+                    <p className="mt-1 text-sm text-gray-400">
+                      {financials.paymentStatus}
+                    </p>
+                  </div>
+
+                  <span className="text-2xl font-bold">
+                    {money(financials.balance)}
+                  </span>
+                </div>
+
+                <div className="mt-7 flex flex-wrap justify-end gap-3">
+                  <button
+                    onClick={() => downloadPdf(selected)}
+                    className="rounded-full bg-[#d4b16f] px-5 py-3 font-semibold text-black"
+                  >
+                    Download PDF
+                  </button>
+
+                  <button
+                    onClick={() => printInvoice(selected)}
+                    className="rounded-full border border-[#d4b16f]/40 px-5 py-3 text-[#d4b16f]"
+                  >
+                    Print
+                  </button>
+
+                  <button
+                    onClick={() => whatsappInvoice(selected)}
+                    className="rounded-full border border-emerald-500/40 px-5 py-3 text-emerald-400"
+                  >
+                    WhatsApp
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    </main>
+  );
+}
