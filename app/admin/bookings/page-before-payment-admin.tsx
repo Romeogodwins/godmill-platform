@@ -7,9 +7,6 @@ interface Room {
   room_number: string;
   room_type: string;
   status: string;
-  payment_status: string | null;
-  proof_of_payment_url: string | null;
-  proof_uploaded_at: string | null;
 }
 
 interface Booking {
@@ -32,9 +29,6 @@ interface Booking {
   grand_total: number;
   special_requests: string;
   status: string;
-  payment_status: string | null;
-  proof_of_payment_url: string | null;
-  proof_uploaded_at: string | null;
   created_at: string;
   rooms: Room | null;
 }
@@ -155,129 +149,6 @@ export default function BookingsPage() {
     }
   }
 
-  async function handlePaymentAction(
-    booking: Booking,
-    action: "view-proof" | "verify"
-  ) {
-    try {
-      setUpdatingId(booking.id);
-      setError("");
-      setMessage("");
-
-      const response = await fetch(
-        "/api/admin/bookings/payment",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            bookingId: booking.id,
-            action,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(
-          result.message ||
-            "Unable to process payment."
-        );
-      }
-
-      if (action === "view-proof") {
-        if (!result.url) {
-          throw new Error(
-            "Proof of payment URL was not returned."
-          );
-        }
-
-        window.open(
-          result.url,
-          "_blank",
-          "noopener,noreferrer"
-        );
-
-        return;
-      }
-
-      setMessage(
-        result.message ||
-          "Payment verified successfully."
-      );
-
-      await loadBookings();
-    } catch (err) {
-      console.error(err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to process payment."
-      );
-    } finally {
-      setUpdatingId(null);
-    }
-  }
-
-  function renderPayment(booking: Booking) {
-    const working = updatingId === booking.id;
-
-    if (booking.payment_status === "verified") {
-      return (
-        <span className="inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400">
-          Payment Verified
-        </span>
-      );
-    }
-
-    if (
-      booking.payment_status === "proof_received" &&
-      booking.proof_of_payment_url
-    ) {
-      return (
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={working}
-            onClick={() =>
-              handlePaymentAction(
-                booking,
-                "view-proof"
-              )
-            }
-            className="rounded-full border border-[#d4b16f]/40 px-3 py-2 text-xs font-semibold text-[#d4b16f] disabled:opacity-50"
-          >
-            View Proof
-          </button>
-
-          <button
-            type="button"
-            disabled={working}
-            onClick={() =>
-              handlePaymentAction(
-                booking,
-                "verify"
-              )
-            }
-            className="rounded-full bg-emerald-500 px-3 py-2 text-xs font-semibold text-black disabled:opacity-50"
-          >
-            {working
-              ? "Updating..."
-              : "Verify Payment"}
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <span className="inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-400">
-        Awaiting Payment
-      </span>
-    );
-  }
   function statusStyle(status: string) {
     switch (status.toLowerCase()) {
       case "confirmed":
@@ -557,7 +428,7 @@ export default function BookingsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1550px]">
+              <table className="w-full min-w-[1350px]">
                 <thead className="border-b border-white/10 bg-white/[0.02]">
                   <tr className="text-left text-sm text-gray-400">
                     <th className="px-6 py-5">
