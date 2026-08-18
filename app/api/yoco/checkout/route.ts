@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         headers: {
           Authorization: `Bearer ${secretKey}`,
           "Content-Type": "application/json",
-          "Idempotency-Key": `godmill-${body.bookingId}-${Date.now()}`,
+          "Idempotency-Key": `godmill-${body.bookingId}`,
         },
         body: JSON.stringify({
           amount: amountInCents,
