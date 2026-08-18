@@ -222,6 +222,7 @@ export default function BookingPage() {
           !result.room
         ) {
           setAvailableRoom(null);
+          setAvailableCount(null);
 
           setFeedback(
             result.message ||
@@ -242,6 +243,7 @@ return result.room;
         );
 
         setAvailableRoom(null);
+        setAvailableCount(null);
 
         setFeedback(
           "We could not check room availability right now."
@@ -367,11 +369,20 @@ return result.room;
       });
 
       setProofFile(null);
-      setProofUploaded(false);
-      setProofMessage(null);
-      setSubmitted(true);
+setProofUploaded(false);
+setProofMessage(null);
+setSubmitted(true);
 
-      const roomText =
+setTimeout(() => {
+  document
+    .getElementById("eft-payment")
+    ?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+}, 200);
+
+const roomText =
         room.room_number
           ? ` Room: ${room.room_number}.`
           : "";
@@ -635,7 +646,7 @@ return result.room;
           ) : null}
 
           {createdBooking ? (
-            <div className="mb-8 rounded-3xl border border-[#d4b16f]/30 bg-[#111111] p-6 md:p-8">
+            <div id="eft-payment" className="mb-8 scroll-mt-6 rounded-3xl border border-[#d4b16f]/30 bg-[#111111] p-6 md:p-8">
               <div className="flex flex-col gap-4 border-b border-white/10 pb-6 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#d4b16f]">
@@ -749,7 +760,7 @@ return result.room;
                   </div>
                 ) : (
                   <div className="mt-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4 text-emerald-300">
-                    âœ“ Proof received â€” awaiting payment verification.
+                    ✓ Proof received — awaiting payment verification.
                   </div>
                 )}
 
