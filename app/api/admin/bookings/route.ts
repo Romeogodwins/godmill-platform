@@ -27,6 +27,9 @@ export async function GET() {
         grand_total,
         special_requests,
         status,
+        payment_status,
+        proof_of_payment_url,
+        proof_uploaded_at,
         created_at,
         rooms (
           id,
