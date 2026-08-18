@@ -104,7 +104,7 @@ export default function BookingForm({
               className="w-full rounded-2xl border border-white/10 bg-[#0f0f0f] px-4 py-3 text-white outline-none transition focus:border-[#d4b16f]"
             >
               <option value="Executive Room">Executive Room</option>
-              <option value="Standard Double">Standard Double</option>
+              <option value="Standard Room">Standard Room</option>
               <option value="Family 3 Sleeper">Family 3 Sleeper</option>
             </select>
           </div>
@@ -225,3 +225,4 @@ export default function BookingForm({
     </form>
   );
 }
+

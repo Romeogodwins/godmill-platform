@@ -6,13 +6,13 @@ interface PriceCalculatorProps {
 
 const roomRates: Record<string, number> = {
   "Executive Room": 750,
-  "Standard Double": 600,
+  "Standard Room": 600,
   "Family 3 Sleeper": 850,
 };
 
 const nonAirconRates: Record<string, number> = {
   "Executive Room": 750,
-  "Standard Double": 500,
+  "Standard Room": 500,
   "Family 3 Sleeper": 750,
 };
 
@@ -30,7 +30,7 @@ export default function PriceCalculator({ form }: PriceCalculatorProps) {
     : 0;
 
   const roomRate =
-    form.roomType === "Standard Double" || form.roomType === "Family 3 Sleeper"
+    form.roomType === "Standard Room" || form.roomType === "Family 3 Sleeper"
       ? form.aircon === "Non-Aircon"
         ? nonAirconRates[form.roomType]
         : roomRates[form.roomType]
@@ -62,3 +62,4 @@ export default function PriceCalculator({ form }: PriceCalculatorProps) {
     </div>
   );
 }
+

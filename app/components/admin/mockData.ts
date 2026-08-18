@@ -56,7 +56,7 @@ export const bookings: Booking[] = [
     id: 1044,
     guestName: "Sibusiso Dlamini",
     phone: "074 112 9988",
-    room: "Standard Double Aircon",
+    room: "Standard Room Aircon",
     checkIn: "08 Aug",
     checkOut: "09 Aug",
     guests: 2,
@@ -67,7 +67,7 @@ export const bookings: Booking[] = [
     id: 1045,
     guestName: "Palesa Molefe",
     phone: "078 221 7744",
-    room: "Standard Double Non-Aircon",
+    room: "Standard Room Non-Aircon",
     checkIn: "09 Aug",
     checkOut: "11 Aug",
     guests: 1,
@@ -89,8 +89,8 @@ export const bookings: Booking[] = [
 
 export const rooms: RoomItem[] = [
   { id: "E-01", roomNumber: "101", roomType: "Executive Room", price: "R750", status: "Occupied", cleaningStatus: "Ready" },
-  { id: "S-01", roomNumber: "102", roomType: "Standard Double Aircon", price: "R600", status: "Available", cleaningStatus: "Ready" },
-  { id: "S-02", roomNumber: "103", roomType: "Standard Double Non-Aircon", price: "R500", status: "Cleaning", cleaningStatus: "In progress" },
+  { id: "S-01", roomNumber: "102", roomType: "Standard Room Aircon", price: "R600", status: "Available", cleaningStatus: "Ready" },
+  { id: "S-02", roomNumber: "103", roomType: "Standard Room Non-Aircon", price: "R500", status: "Cleaning", cleaningStatus: "In progress" },
   { id: "F-01", roomNumber: "104", roomType: "Family Aircon", price: "R850", status: "Available", cleaningStatus: "Ready" },
   { id: "F-02", roomNumber: "105", roomType: "Family Non-Aircon", price: "R750", status: "Maintenance", cleaningStatus: "Pending" },
 ];
@@ -142,3 +142,4 @@ export const businessInfo = {
     { name: "Family Non-Aircon", price: "R750" },
   ],
 };
+

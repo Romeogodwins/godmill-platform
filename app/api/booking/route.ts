@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       capacity = 2;
       hasAircon = true;
     } else if (
-      payload.roomType === "Standard 2 Sleeper"
+      payload.roomType === "Standard Room"
     ) {
       databaseRoomType = "Standard Room";
       capacity = 2;

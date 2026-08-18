@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createSupabaseClient } from "../../../../lib/supabase/client";
 
 interface StatusPayload {

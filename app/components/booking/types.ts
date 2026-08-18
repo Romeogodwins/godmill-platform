@@ -1,4 +1,4 @@
-export type RoomType = "Executive Room" | "Standard Double" | "Family 3 Sleeper";
+export type RoomType = "Executive Room" | "Standard Room" | "Family 3 Sleeper";
 export type AirconPreference = "Aircon" | "Non-Aircon";
 
 export interface BookingFormState {
@@ -16,3 +16,4 @@ export interface BookingFormState {
 }
 
 export type BookingErrors = Partial<Record<keyof BookingFormState, string>>;
+

@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     if (requestedRoomType === "Executive Room") {
       databaseRoomType = "Executive Room";
       expectedPrice = 750;
-    } else if (requestedRoomType === "Standard 2 Sleeper") {
+    } else if (requestedRoomType === "Standard Room") {
       databaseRoomType = "Standard Room";
 
       if (aircon === "Aircon") {
