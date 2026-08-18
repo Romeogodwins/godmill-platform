@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import {
@@ -599,10 +599,9 @@ export default function BookingPage() {
 
             {availableRoom ? (
               <div className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-                Room available
-                {availableRoom.room_number
-                  ? `: ${availableRoom.room_number}`
-                  : "."}
+                {availableCount === 1
+                  ? "1 room available for your selected dates."
+                  : `${availableCount ?? 1} rooms available for your selected dates.`}
               </div>
             ) : null}
           </div>
@@ -748,7 +747,7 @@ export default function BookingPage() {
                   </div>
                 ) : (
                   <div className="mt-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4 text-emerald-300">
-                    ✓ Proof received — awaiting payment verification.
+                    âœ“ Proof received â€” awaiting payment verification.
                   </div>
                 )}
 
