@@ -589,6 +589,10 @@ export default function BookingsPage() {
                     </th>
 
                     <th className="px-6 py-5">
+                      Payment
+                    </th>
+
+                    <th className="px-6 py-5">
                       Action
                     </th>
                   </tr>
@@ -694,6 +698,10 @@ export default function BookingsPage() {
                         >
                           {booking.status}
                         </span>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        {renderPayment(booking)}
                       </td>
 
                       <td className="px-6 py-5">
