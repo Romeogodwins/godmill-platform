@@ -209,11 +209,12 @@ export default function BookingPage() {
         );
 
         const result =
-          (await response.json()) as {
-            success?: boolean;
-            room?: AvailableRoom;
-            message?: string;
-          };
+  (await response.json()) as {
+    success?: boolean;
+    room?: AvailableRoom;
+    availableCount?: number;
+    message?: string;
+  };
 
         if (
           !response.ok ||
@@ -231,8 +232,9 @@ export default function BookingPage() {
         }
 
         setAvailableRoom(result.room);
+setAvailableCount(result.availableCount ?? 1);
 
-        return result.room;
+return result.room;
       } catch (error) {
         console.error(
           "Availability check failed:",
