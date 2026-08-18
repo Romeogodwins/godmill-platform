@@ -54,6 +54,25 @@ export default function BookingPage() {
   const [feedback, setFeedback] =
     useState<string | null>(null);
 
+  const [createdBooking, setCreatedBooking] =
+    useState<{
+      id: string;
+      reference: string;
+      amount: number;
+      roomNumber?: string;
+    } | null>(null);
+
+  const [proofFile, setProofFile] =
+    useState<File | null>(null);
+
+  const [uploadingProof, setUploadingProof] =
+    useState(false);
+
+  const [proofUploaded, setProofUploaded] =
+    useState(false);
+
+  const [proofMessage, setProofMessage] =
+    useState<string | null>(null);
   const validate = (values: BookingFormState) => {
     const nextErrors: BookingErrors = {};
 
@@ -334,6 +353,16 @@ export default function BookingPage() {
         );
       }
 
+      setCreatedBooking({
+        id: result.booking.id,
+        reference: result.bookingReference,
+        amount: Number(result.pricing.grandTotal),
+        roomNumber: room.room_number,
+      });
+
+      setProofFile(null);
+      setProofUploaded(false);
+      setProofMessage(null);
       setSubmitted(true);
 
       const roomText =
@@ -377,6 +406,87 @@ export default function BookingPage() {
     }
   };
 
+  const handleProofUpload = async () => {
+    if (!createdBooking) {
+      setProofMessage(
+        "Please complete your booking before uploading proof of payment."
+      );
+      return;
+    }
+
+    if (!proofFile) {
+      setProofMessage(
+        "Please choose your proof of payment first."
+      );
+      return;
+    }
+
+    try {
+      setUploadingProof(true);
+      setProofMessage(null);
+
+      const formData = new FormData();
+
+      formData.append(
+        "bookingId",
+        createdBooking.id
+      );
+
+      formData.append(
+        "bookingReference",
+        createdBooking.reference
+      );
+
+      formData.append(
+        "file",
+        proofFile
+      );
+
+      const response = await fetch(
+        "/api/booking/proof-of-payment",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const result =
+        (await response.json()) as {
+          success?: boolean;
+          message?: string;
+        };
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.message ||
+            "Unable to upload proof of payment."
+        );
+      }
+
+      setProofUploaded(true);
+
+      setProofMessage(
+        result.message ||
+          "Proof of payment uploaded successfully. Your payment is awaiting verification."
+      );
+    } catch (error) {
+      console.error(
+        "Proof upload failed:",
+        error
+      );
+
+      setProofMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to upload proof of payment."
+      );
+    } finally {
+      setUploadingProof(false);
+    }
+  };
   const handleWhatsApp = () => {
     const nextErrors = validate(form);
     setErrors(nextErrors);
@@ -519,6 +629,139 @@ export default function BookingPage() {
             </div>
           ) : null}
 
+          {createdBooking ? (
+            <div className="mb-8 rounded-3xl border border-[#d4b16f]/30 bg-[#111111] p-6 md:p-8">
+              <div className="flex flex-col gap-4 border-b border-white/10 pb-6 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#d4b16f]">
+                    Payment Pending
+                  </p>
+
+                  <h2 className="mt-2 text-2xl font-bold">
+                    Complete your EFT payment
+                  </h2>
+
+                  <p className="mt-2 text-sm text-gray-400">
+                    Your room has been reserved. Your booking will be confirmed after payment verification.
+                  </p>
+                </div>
+
+                <div className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-300">
+                  Awaiting Payment
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-6 md:grid-cols-2">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <h3 className="font-semibold text-[#d4b16f]">
+                    Booking Details
+                  </h3>
+
+                  <div className="mt-4 space-y-3 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-400">Reference</span>
+                      <strong>{createdBooking.reference}</strong>
+                    </div>
+
+                    {createdBooking.roomNumber ? (
+                      <div className="flex justify-between gap-4">
+                        <span className="text-gray-400">Room</span>
+                        <strong>{createdBooking.roomNumber}</strong>
+                      </div>
+                    ) : null}
+
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-400">Amount Due</span>
+                      <strong className="text-xl text-[#d4b16f]">
+                        R{createdBooking.amount.toLocaleString("en-ZA")}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <h3 className="font-semibold text-[#d4b16f]">
+                    EFT Banking Details
+                  </h3>
+
+                  <div className="mt-4 space-y-2 text-sm">
+                    <p><span className="text-gray-400">Bank:</span> FNB</p>
+                    <p><span className="text-gray-400">Account Name:</span> Godmill</p>
+                    <p><span className="text-gray-400">Account Number:</span> 62836688616</p>
+                    <p><span className="text-gray-400">Account Type:</span> Current</p>
+                    <p>
+                      <span className="text-gray-400">Payment Reference:</span>{" "}
+                      <strong>{createdBooking.reference}</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-5">
+                <h3 className="text-lg font-semibold">
+                  Upload Proof of Payment
+                </h3>
+
+                <p className="mt-2 text-sm text-gray-400">
+                  Upload your bank receipt after making the EFT payment. PDF, JPG and PNG files up to 5MB are accepted.
+                </p>
+
+                {!proofUploaded ? (
+                  <div className="mt-5 flex flex-col gap-4">
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                      onChange={(event) => {
+                        const file =
+                          event.target.files?.[0] ??
+                          null;
+
+                        setProofFile(file);
+                        setProofMessage(null);
+                      }}
+                      className="block w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-gray-300 file:mr-4 file:rounded-full file:border-0 file:bg-[#d4b16f] file:px-4 file:py-2 file:font-semibold file:text-black"
+                    />
+
+                    {proofFile ? (
+                      <p className="text-sm text-gray-400">
+                        Selected: {proofFile.name}
+                      </p>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={handleProofUpload}
+                      disabled={
+                        uploadingProof ||
+                        !proofFile
+                      }
+                      className="w-full rounded-full bg-[#d4b16f] px-6 py-3 font-semibold text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 md:w-fit"
+                    >
+                      {uploadingProof
+                        ? "Uploading..."
+                        : "Upload Proof of Payment"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4 text-emerald-300">
+                    ✓ Proof received — awaiting payment verification.
+                  </div>
+                )}
+
+                {proofMessage ? (
+                  <div
+                    className={`mt-4 rounded-xl border px-4 py-3 text-sm ${
+                      proofUploaded
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                        : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                    }`}
+                  >
+                    {proofMessage}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
           <BookingForm
             form={form}
             errors={errors}
