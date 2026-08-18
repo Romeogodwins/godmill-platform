@@ -51,6 +51,9 @@ export default function BookingPage() {
   const [availableRoom, setAvailableRoom] =
     useState<AvailableRoom | null>(null);
 
+  const [availableCount, setAvailableCount] =
+    useState<number | null>(null);
+
   const [feedback, setFeedback] =
     useState<string | null>(null);
 
@@ -179,6 +182,7 @@ export default function BookingPage() {
     }));
 
     setAvailableRoom(null);
+    setAvailableCount(null);
     setFeedback(null);
     setSubmitted(false);
   };
