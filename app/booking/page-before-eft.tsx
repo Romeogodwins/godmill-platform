@@ -346,21 +346,65 @@ export default function BookingPage() {
       );
 
       // -----------------------------------------
-      // EFT PAYMENT INSTRUCTIONS
+      // CREATE YOCO CHECKOUT
       // -----------------------------------------
 
-      const amountDue =
-        Number(result.pricing.grandTotal);
+      const checkoutResponse =
+        await fetch(
+          "/api/yoco/checkout",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              bookingId:
+                result.booking.id,
 
-      const eftMessage =
-        `Booking created successfully! Reference: ${result.bookingReference}. ` +
-        `Amount due: R${amountDue.toLocaleString("en-ZA")}. ` +
-        `Please pay by EFT to FNB, Account Name: Godmill, ` +
-        `Account Number: 62836688616, Account Type: Current. ` +
-        `Use ${result.bookingReference} as your payment reference. ` +
-        `Your booking will be confirmed once payment has been verified.`;
+              bookingReference:
+                result.bookingReference,
 
-      setFeedback(eftMessage);
+              amount:
+                result.pricing
+                  .grandTotal,
+            }),
+          }
+        );
+
+      const checkoutResult =
+        (await checkoutResponse.json()) as {
+          success?: boolean;
+          checkoutId?: string;
+          redirectUrl?: string;
+          status?: string;
+          message?: string;
+        };
+
+      if (
+        !checkoutResponse.ok ||
+        !checkoutResult.success
+      ) {
+        throw new Error(
+          checkoutResult.message ||
+            "Booking was created, but the payment page could not be opened."
+        );
+      }
+
+      if (
+        !checkoutResult.redirectUrl
+      ) {
+        throw new Error(
+          "Booking was created, but Yoco did not return a payment link."
+        );
+      }
+
+      // -----------------------------------------
+      // REDIRECT CUSTOMER TO YOCO
+      // -----------------------------------------
+
+      window.location.href =
+        checkoutResult.redirectUrl;
     } catch (error) {
       console.error(
         "Booking/payment failed:",
