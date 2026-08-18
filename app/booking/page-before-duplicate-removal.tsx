@@ -628,7 +628,124 @@ export default function BookingPage() {
               {feedback}
             </div>
           ) : null}
+{createdBooking ? (
+  <div className="mb-8 rounded-3xl border border-[#d4b16f]/30 bg-[#111111] p-6 md:p-8">
+    <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#d4b16f]">
+          EFT Payment
+        </p>
 
+        <h2 className="mt-3 text-2xl font-semibold text-white">
+          Upload Proof of Payment
+        </h2>
+
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">
+          Your booking has been created. Please make the EFT
+          payment and upload your proof of payment below.
+        </p>
+      </div>
+
+      <span className="w-fit rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-300">
+        Payment Pending
+      </span>
+    </div>
+
+    <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+        <p className="text-xs uppercase tracking-widest text-gray-500">
+          Booking Reference
+        </p>
+
+        <p className="mt-2 text-lg font-bold text-[#d4b16f]">
+          {createdBooking.reference}
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+        <p className="text-xs uppercase tracking-widest text-gray-500">
+          Amount Due
+        </p>
+
+        <p className="mt-2 text-lg font-bold text-white">
+          R
+          {Number(
+            createdBooking.amount
+          ).toLocaleString("en-ZA")}
+        </p>
+      </div>
+    </div>
+
+    <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5">
+      <p className="font-semibold text-white">
+        FNB Banking Details
+      </p>
+
+      <div className="mt-3 space-y-1 text-sm text-gray-300">
+        <p>Account Name: Godmill</p>
+        <p>Account Number: 62836688616</p>
+        <p>Account Type: Current</p>
+        <p>
+          Payment Reference:{" "}
+          <strong className="text-[#d4b16f]">
+            {createdBooking.reference}
+          </strong>
+        </p>
+      </div>
+    </div>
+
+    {!proofUploaded ? (
+      <div className="mt-6">
+        <label className="block text-sm font-semibold text-white">
+          Proof of Payment
+        </label>
+
+        <input
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+          onChange={(event) => {
+            setProofFile(
+              event.target.files?.[0] ?? null
+            );
+            setProofMessage(null);
+          }}
+          className="mt-3 block w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-gray-300 file:mr-4 file:rounded-full file:border-0 file:bg-[#d4b16f] file:px-4 file:py-2 file:font-semibold file:text-black"
+        />
+
+        <p className="mt-2 text-xs text-gray-500">
+          Accepted formats: PDF, JPG and PNG.
+        </p>
+
+        <button
+          type="button"
+          onClick={handleProofUpload}
+          disabled={!proofFile || uploadingProof}
+          className="mt-5 rounded-full bg-[#d4b16f] px-6 py-3 font-semibold text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {uploadingProof
+            ? "Uploading..."
+            : "Upload Proof of Payment"}
+        </button>
+      </div>
+    ) : (
+      <div className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-emerald-300">
+        ✓ Proof received — awaiting payment verification.
+      </div>
+    )}
+
+    {proofMessage ? (
+      <div
+        className={`mt-5 rounded-2xl border p-4 text-sm ${
+          proofUploaded
+            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+            : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+        }`}
+      >
+        {proofMessage}
+      </div>
+    ) : null}
+  </div>
+) : null}
           {createdBooking ? (
             <div className="mb-8 rounded-3xl border border-[#d4b16f]/30 bg-[#111111] p-6 md:p-8">
               <div className="flex flex-col gap-4 border-b border-white/10 pb-6 md:flex-row md:items-center md:justify-between">
