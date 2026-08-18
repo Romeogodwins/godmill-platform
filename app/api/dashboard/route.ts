@@ -126,7 +126,7 @@ export async function GET() {
             "confirmed",
             "checked-in",
           ].includes(booking.status) &&
-          booking.check_out >= today
+          booking.check_out > today
       )
       .sort((a, b) =>
         a.check_in.localeCompare(b.check_in)
