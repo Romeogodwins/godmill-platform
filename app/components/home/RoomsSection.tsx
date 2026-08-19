@@ -5,7 +5,7 @@ const rooms = [
   {
     title: "Executive Room",
     image: "/Room 3.jpeg",
-    price: "From R750 / night",
+    price: "R750 / night",
     description:
       "Premium accommodation in Taung for business travellers, couples and guests looking for extra comfort.",
     features: [
@@ -31,13 +31,13 @@ const rooms = [
   {
     title: "Family Room",
     image: "/Room 1.jpeg",
-    price: "From R850 / night",
+    price: "From R750 / night",
     description:
-      "Spacious family accommodation in Taung for up to three guests, with comfort and convenience for your stay.",
+      "Spacious three-sleeper family accommodation in Taung for families and small groups.",
     features: [
       "3 Sleeper",
       "Free WiFi",
-      "Air Conditioning",
+      "Air Conditioning Options",
       "Private Bathroom",
     ],
   },
@@ -50,24 +50,22 @@ export default function RoomsSection() {
       className="bg-[#080808] py-24"
       aria-labelledby="rooms-heading"
     >
-      <div className="mx-auto max-w-7xl px-8">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <p className="uppercase tracking-[0.3em] text-[#d4b16f]">
           Rooms & Accommodation
         </p>
 
         <h2
           id="rooms-heading"
-          className="mt-3 text-5xl font-bold text-white"
+          className="mt-3 max-w-4xl text-4xl font-bold text-white md:text-5xl"
         >
           Guesthouse Accommodation in Taung
         </h2>
 
         <p className="mt-6 max-w-3xl text-lg leading-8 text-gray-300">
-          Stay at Godmill City Guesthouse in Taung, North West.
-          Choose from Executive, Standard and Family rooms with
-          comfortable beds, private bathrooms, free WiFi and secure
-          parking. Whether you are travelling for business, visiting
-          family or looking for an overnight stay in Taung, we offer
+          Choose from Executive, Standard and Family rooms at Godmill City
+          Guesthouse in Taung. Whether you are travelling for business,
+          visiting family or looking for an overnight stay, we offer
           comfortable accommodation at competitive rates.
         </p>
 
@@ -75,15 +73,15 @@ export default function RoomsSection() {
           {rooms.map((room) => (
             <article
               key={room.title}
-              className="overflow-hidden rounded-3xl bg-[#121212] shadow-xl transition duration-300 hover:-translate-y-2"
+              className="group overflow-hidden rounded-3xl border border-white/10 bg-[#121212] shadow-xl transition duration-300 hover:-translate-y-2 hover:border-[#d4b16f]/40"
             >
-              <div className="relative h-72">
+              <div className="relative h-72 overflow-hidden">
                 <Image
                   src={room.image}
                   alt={`${room.title} at Godmill City Guesthouse in Taung`}
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover"
+                  className="object-cover transition duration-700 group-hover:scale-105"
                 />
               </div>
 
@@ -100,24 +98,28 @@ export default function RoomsSection() {
                   {room.description}
                 </p>
 
-                <ul className="mt-6 space-y-2 text-gray-300">
+                <ul className="mt-6 space-y-3 text-gray-300">
                   {room.features.map((feature) => (
-                    <li key={feature}>
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3"
+                    >
                       <span
-                        className="mr-2 text-[#d4b16f]"
+                        className="font-bold text-[#d4b16f]"
                         aria-hidden="true"
                       >
-                        ✓
+                        &#10003;
                       </span>
-                      {feature}
+
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
 
                 <Link
                   href="/booking"
-                  aria-label={`Book ${room.title} at Godmill City Guesthouse`}
-                  className="mt-8 inline-block rounded-full bg-[#d4b16f] px-6 py-3 font-semibold text-black transition hover:scale-105"
+                  aria-label={`Check availability for ${room.title}`}
+                  className="mt-8 inline-block rounded-full bg-[#d4b16f] px-6 py-3 font-semibold text-black transition hover:bg-[#e3c27d]"
                 >
                   Check Availability
                 </Link>
@@ -126,19 +128,31 @@ export default function RoomsSection() {
           ))}
         </div>
 
-        <div className="mt-14 text-center">
-          <p className="text-lg text-gray-300">
-            Looking for accommodation in Taung? Check availability
-            online and reserve your room directly with Godmill City
-            Guesthouse.
+        <div className="mt-14 rounded-3xl border border-white/10 bg-[#111] p-8 text-center md:p-10">
+          <h3 className="text-2xl font-semibold text-white">
+            Looking for a Room in Taung?
+          </h3>
+
+          <p className="mx-auto mt-4 max-w-2xl leading-7 text-gray-300">
+            Check availability online and reserve your room directly with
+            Godmill City Guesthouse.
           </p>
 
-          <Link
-            href="/booking"
-            className="mt-6 inline-block rounded-full border border-[#d4b16f] px-8 py-4 font-semibold text-[#d4b16f] transition hover:bg-[#d4b16f] hover:text-black"
-          >
-            View Availability & Book
-          </Link>
+          <div className="mt-7 flex flex-wrap justify-center gap-4">
+            <Link
+              href="/booking"
+              className="rounded-full bg-[#d4b16f] px-8 py-4 font-semibold text-black transition hover:bg-[#e3c27d]"
+            >
+              View Availability & Book
+            </Link>
+
+            <Link
+              href="/gallery"
+              className="rounded-full border border-white/30 px-8 py-4 font-semibold text-white transition hover:bg-white hover:text-black"
+            >
+              View Photo Gallery
+            </Link>
+          </div>
         </div>
       </div>
     </section>
