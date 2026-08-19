@@ -4,7 +4,7 @@ import Link from "next/link";
 const rooms = [
   {
     title: "Executive Room",
-    image: "/Room 1.jpeg",
+    image: "/Room 3.jpeg",
     price: "From R750 / night",
     description:
       "Premium accommodation in Taung for business travellers, couples and guests looking for extra comfort.",
@@ -30,7 +30,7 @@ const rooms = [
   },
   {
     title: "Family Room",
-    image: "/Room 3.jpeg",
+    image: "/Room 1.jpeg",
     price: "From R850 / night",
     description:
       "Spacious family accommodation in Taung for up to three guests, with comfort and convenience for your stay.",

@@ -47,7 +47,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/#gallery"
+            href="/gallery"
             className="transition hover:text-[#d4b16f]"
           >
             Gallery
