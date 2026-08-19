@@ -18,7 +18,8 @@ export const metadata: Metadata = {
     "Godmill City Guesthouse",
   ],
   alternates: {
-    canonical: "https://www.godmillcityguesthouse.com/accommodation-taung",
+    canonical:
+      "https://www.godmillcityguesthouse.com/accommodation-taung",
   },
   openGraph: {
     title: "Accommodation in Taung | Godmill City Guesthouse",
@@ -81,13 +82,23 @@ export default function AccommodationTaungPage() {
     <main className="min-h-screen bg-[#080808] text-white">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
       />
 
+      {/* HERO */}
       <section className="border-b border-white/10 px-6 py-24">
         <div className="mx-auto max-w-5xl">
+          <Link
+            href="/"
+            className="mb-8 inline-block text-sm text-gray-400 transition hover:text-[#d4b16f]"
+          >
+            ← Godmill City Guesthouse
+          </Link>
+
           <p className="mb-4 uppercase tracking-[0.3em] text-[#d4b16f]">
-            Godmill City Guesthouse
+            Stay in Taung
           </p>
 
           <h1 className="max-w-4xl text-5xl font-bold leading-tight md:text-7xl">
@@ -96,21 +107,21 @@ export default function AccommodationTaungPage() {
 
           <p className="mt-8 max-w-3xl text-xl leading-8 text-gray-300">
             Looking for comfortable accommodation in Taung? Godmill City
-            Guesthouse offers executive, standard and family accommodation for
+            Guesthouse offers executive, standard and family rooms for
             business travellers, couples, families and visitors to Taung.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/booking"
-              className="rounded-full bg-[#d4b16f] px-8 py-4 font-semibold text-black"
+              className="rounded-full bg-[#d4b16f] px-8 py-4 font-semibold text-black transition hover:opacity-90"
             >
-              Book Accommodation
+              Check Availability
             </Link>
 
             <a
               href="tel:+27790582637"
-              className="rounded-full border border-white/30 px-8 py-4 font-semibold"
+              className="rounded-full border border-white/30 px-8 py-4 font-semibold transition hover:bg-white hover:text-black"
             >
               Call 079 058 2637
             </a>
@@ -118,101 +129,238 @@ export default function AccommodationTaungPage() {
         </div>
       </section>
 
+      {/* INTRODUCTION */}
       <section className="px-6 py-20">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-4xl font-bold">
+          <p className="uppercase tracking-[0.25em] text-[#d4b16f]">
+            Godmill City Guesthouse
+          </p>
+
+          <h2 className="mt-3 text-4xl font-bold">
             Comfortable Guesthouse Accommodation in Taung
           </h2>
 
           <p className="mt-6 max-w-4xl text-lg leading-8 text-gray-300">
-            Godmill City Guesthouse provides convenient accommodation in Taung,
-            North West, South Africa. Our guesthouse is situated at No. 217
-            Khibitswane, Cokonyane Road and provides a comfortable base for
-            guests visiting Taung for business, work, family visits or leisure.
+            Godmill City Guesthouse provides convenient accommodation in
+            Taung, North West, South Africa. Our guesthouse is situated at
+            No. 217 Khibitswane, Cokonyane Road and provides a comfortable
+            base for guests visiting Taung for business, work, family visits
+            or leisure.
           </p>
 
           <p className="mt-5 max-w-4xl text-lg leading-8 text-gray-300">
-            Guests can choose from different room options, including executive,
-            standard and family rooms. Facilities include free WiFi, secure
-            parking, private bathrooms and a swimming pool.
+            Guests can choose from executive, standard and family room
+            options. Facilities include complimentary WiFi, secure guest
+            parking, private bathrooms and access to a swimming pool.
           </p>
         </div>
       </section>
 
+      {/* ROOMS */}
       <section className="bg-[#111] px-6 py-20">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-4xl font-bold">Rooms in Taung</h2>
+          <p className="uppercase tracking-[0.25em] text-[#d4b16f]">
+            Choose Your Stay
+          </p>
+
+          <h2 className="mt-3 text-4xl font-bold">
+            Rooms at Godmill City Guesthouse
+          </h2>
+
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-gray-300">
+            Choose the room that suits your stay and check live availability
+            through our direct booking system.
+          </p>
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
-            <div className="rounded-3xl border border-white/10 p-7">
-              <h3 className="text-2xl font-semibold">Executive Room</h3>
-              <p className="mt-3 text-[#d4b16f]">From R750 per night</p>
-              <p className="mt-4 leading-7 text-gray-300">
-                Comfortable accommodation with air conditioning, WiFi, private
-                bathroom and Smart TV.
-              </p>
-            </div>
+            <article className="rounded-3xl border border-white/10 bg-[#0b0b0b] p-7">
+              <h3 className="text-2xl font-semibold">
+                Executive Room
+              </h3>
 
-            <div className="rounded-3xl border border-white/10 p-7">
-              <h3 className="text-2xl font-semibold">Standard Room</h3>
-              <p className="mt-3 text-[#d4b16f]">From R500 per night</p>
-              <p className="mt-4 leading-7 text-gray-300">
-                An affordable and comfortable option for travellers looking for
-                accommodation in Taung.
+              <p className="mt-3 text-lg font-semibold text-[#d4b16f]">
+                R750 per night
               </p>
-            </div>
 
-            <div className="rounded-3xl border border-white/10 p-7">
-              <h3 className="text-2xl font-semibold">Family Room</h3>
-              <p className="mt-3 text-[#d4b16f]">From R750 per night</p>
               <p className="mt-4 leading-7 text-gray-300">
-                Three-sleeper accommodation suitable for families and small
-                groups visiting Taung.
+                Comfortable accommodation with air conditioning, free WiFi,
+                private bathroom and Smart TV.
               </p>
-            </div>
+
+              <Link
+                href="/booking"
+                className="mt-6 inline-block font-semibold text-[#d4b16f]"
+              >
+                Check availability →
+              </Link>
+            </article>
+
+            <article className="rounded-3xl border border-white/10 bg-[#0b0b0b] p-7">
+              <h3 className="text-2xl font-semibold">
+                Standard Room
+              </h3>
+
+              <p className="mt-3 text-lg font-semibold text-[#d4b16f]">
+                From R500 per night
+              </p>
+
+              <p className="mt-4 leading-7 text-gray-300">
+                Comfortable two-sleeper accommodation with air-conditioned
+                and non-air-conditioned room options available.
+              </p>
+
+              <Link
+                href="/booking"
+                className="mt-6 inline-block font-semibold text-[#d4b16f]"
+              >
+                Check availability →
+              </Link>
+            </article>
+
+            <article className="rounded-3xl border border-white/10 bg-[#0b0b0b] p-7">
+              <h3 className="text-2xl font-semibold">
+                Family 3-Sleeper Room
+              </h3>
+
+              <p className="mt-3 text-lg font-semibold text-[#d4b16f]">
+                From R750 per night
+              </p>
+
+              <p className="mt-4 leading-7 text-gray-300">
+                Three-sleeper accommodation for families and small groups,
+                with air-conditioned and non-air-conditioned options.
+              </p>
+
+              <Link
+                href="/booking"
+                className="mt-6 inline-block font-semibold text-[#d4b16f]"
+              >
+                Check availability →
+              </Link>
+            </article>
           </div>
+
+          <p className="mt-8 text-sm leading-6 text-gray-400">
+            Room prices depend on the room type and air-conditioning option
+            selected. Live availability is confirmed during booking.
+          </p>
         </div>
       </section>
 
+      {/* AMENITIES */}
       <section className="px-6 py-20">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-4xl font-bold">
+          <p className="uppercase tracking-[0.25em] text-[#d4b16f]">
+            Guest Facilities
+          </p>
+
+          <h2 className="mt-3 text-4xl font-bold">
             Why Stay at Godmill City Guesthouse?
           </h2>
 
           <div className="mt-10 grid gap-4 text-lg text-gray-300 md:grid-cols-2">
-            <p>✓ Free WiFi</p>
-            <p>✓ Secure guest parking</p>
-            <p>✓ Swimming pool</p>
-            <p>✓ Air-conditioned room options</p>
-            <p>✓ Private bathrooms</p>
-            <p>✓ Family accommodation</p>
-            <p>✓ Online booking</p>
-            <p>✓ Convenient Taung location</p>
+            <p>
+              <span className="mr-2 text-[#d4b16f]">✓</span>
+              Free WiFi
+            </p>
+
+            <p>
+              <span className="mr-2 text-[#d4b16f]">✓</span>
+              Secure guest parking
+            </p>
+
+            <p>
+              <span className="mr-2 text-[#d4b16f]">✓</span>
+              Swimming pool
+            </p>
+
+            <p>
+              <span className="mr-2 text-[#d4b16f]">✓</span>
+              Air-conditioned room options
+            </p>
+
+            <p>
+              <span className="mr-2 text-[#d4b16f]">✓</span>
+              Private bathrooms
+            </p>
+
+            <p>
+              <span className="mr-2 text-[#d4b16f]">✓</span>
+              Family accommodation
+            </p>
+
+            <p>
+              <span className="mr-2 text-[#d4b16f]">✓</span>
+              Direct online booking
+            </p>
+
+            <p>
+              <span className="mr-2 text-[#d4b16f]">✓</span>
+              Convenient Taung location
+            </p>
           </div>
         </div>
       </section>
 
+      {/* DIRECT BOOKING */}
+      <section className="border-y border-white/10 bg-[#0d0d0d] px-6 py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="rounded-3xl border border-[#d4b16f]/30 bg-[#d4b16f]/5 p-8 md:p-12">
+            <p className="uppercase tracking-[0.25em] text-[#d4b16f]">
+              Book Direct
+            </p>
+
+            <h2 className="mt-3 text-3xl font-bold md:text-4xl">
+              Check Live Room Availability
+            </h2>
+
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-gray-300">
+              Use our direct booking system to select your dates, room type
+              and air-conditioning preference and see available rooms for
+              your stay.
+            </p>
+
+            <Link
+              href="/booking"
+              className="mt-8 inline-block rounded-full bg-[#d4b16f] px-8 py-4 font-semibold text-black transition hover:opacity-90"
+            >
+              Check Rooms & Book Direct
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
       <section className="bg-[#111] px-6 py-20">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-4xl font-bold">
-            Frequently Asked Questions About Accommodation in Taung
+          <p className="uppercase tracking-[0.25em] text-[#d4b16f]">
+            Frequently Asked Questions
+          </p>
+
+          <h2 className="mt-3 text-4xl font-bold">
+            Planning Your Stay in Taung
           </h2>
 
           <div className="mt-10 space-y-5">
             {faq.map((item) => (
-              <div
+              <article
                 key={item.question}
-                className="rounded-2xl border border-white/10 p-6"
+                className="rounded-2xl border border-white/10 bg-[#0b0b0b] p-6"
               >
-                <h3 className="text-xl font-semibold">{item.question}</h3>
-                <p className="mt-3 leading-7 text-gray-300">{item.answer}</p>
-              </div>
+                <h3 className="text-xl font-semibold">
+                  {item.question}
+                </h3>
+
+                <p className="mt-3 leading-7 text-gray-300">
+                  {item.answer}
+                </p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
+      {/* CONTACT / CTA */}
       <section className="px-6 py-24 text-center">
         <div className="mx-auto max-w-4xl">
           <p className="uppercase tracking-[0.3em] text-[#d4b16f]">
@@ -223,17 +371,30 @@ export default function AccommodationTaungPage() {
             Book Your Stay at Godmill City Guesthouse
           </h2>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-300">
-            Check availability and book your accommodation directly with
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-300">
+            Check room availability and make your reservation directly with
             Godmill City Guesthouse.
           </p>
 
-          <Link
-            href="/booking"
-            className="mt-9 inline-block rounded-full bg-[#d4b16f] px-10 py-4 font-semibold text-black"
-          >
-            Check Availability
-          </Link>
+          <div className="mt-9 flex flex-wrap justify-center gap-4">
+            <Link
+              href="/booking"
+              className="rounded-full bg-[#d4b16f] px-10 py-4 font-semibold text-black transition hover:opacity-90"
+            >
+              Check Availability
+            </Link>
+
+            <Link
+              href="/"
+              className="rounded-full border border-white/30 px-10 py-4 font-semibold text-white transition hover:bg-white hover:text-black"
+            >
+              Explore Godmill City Guesthouse
+            </Link>
+          </div>
+
+          <p className="mt-8 text-sm text-gray-500">
+            Godmill City Guesthouse · Taung, North West, South Africa
+          </p>
         </div>
       </section>
     </main>
