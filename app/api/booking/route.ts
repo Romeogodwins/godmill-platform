@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 import { createSupabaseClient } from "../../../lib/supabase/client";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const dynamic = "force-dynamic";
 
@@ -291,8 +294,6 @@ export async function POST(request: Request) {
 
     let assignedRoom = null;
 
-    // Prefer the room returned by the earlier
-    // availability check when it is still free.
     if (payload.roomId) {
       assignedRoom =
         usableRooms.find(
@@ -302,7 +303,6 @@ export async function POST(request: Request) {
         ) ?? null;
     }
 
-    // Otherwise assign the first free matching room.
     if (!assignedRoom) {
       assignedRoom =
         usableRooms.find(
@@ -404,8 +404,6 @@ export async function POST(request: Request) {
         email:
           payload.email?.trim() || null,
 
-        // Keep the customer-facing room name
-        // on the booking record.
         room_type: payload.roomType,
 
         aircon: hasAircon,
@@ -471,12 +469,543 @@ export async function POST(request: Request) {
     }
 
     // ---------------------------------------------
+    // EMAIL NOTIFICATIONS
+    // ---------------------------------------------
+
+    try {
+      const formatMoney = (amount: number) =>
+        new Intl.NumberFormat("en-ZA", {
+          style: "currency",
+          currency: "ZAR",
+        }).format(amount);
+
+      const roomDescription =
+        `${payload.roomType} - ${
+          hasAircon ? "Aircon" : "No Aircon"
+        }`;
+
+      // -------------------------------------------
+      // GUEST CONFIRMATION EMAIL
+      // -------------------------------------------
+
+      const bookingDetailsHtml = `
+        <div style="
+          margin:0;
+          padding:20px;
+          background:#f5f5f5;
+          font-family:Arial,Helvetica,sans-serif;
+          color:#222;
+        ">
+
+          <div style="
+            max-width:680px;
+            margin:0 auto;
+            background:#ffffff;
+            border-radius:14px;
+            overflow:hidden;
+            box-shadow:0 4px 18px rgba(0,0,0,0.08);
+          ">
+
+            <div style="
+              background:#111111;
+              padding:32px 25px;
+              text-align:center;
+            ">
+              <h1 style="
+                color:#d4b16f;
+                margin:0;
+                font-size:28px;
+              ">
+                GODMILL CITY GUESTHOUSE
+              </h1>
+
+              <p style="
+                color:#ffffff;
+                margin:10px 0 0;
+                font-size:16px;
+              ">
+                Booking Received
+              </p>
+            </div>
+
+            <div style="padding:30px;">
+
+              <p style="font-size:16px;">
+                Dear <strong>${payload.guestName.trim()}</strong>,
+              </p>
+
+              <p style="line-height:1.7;">
+                Thank you for choosing Godmill City Guesthouse.
+                We have successfully received your reservation request.
+              </p>
+
+              <div style="
+                background:#f7f1e5;
+                border-left:4px solid #d4b16f;
+                padding:18px;
+                margin:25px 0;
+              ">
+                <div style="
+                  font-size:13px;
+                  color:#666;
+                  margin-bottom:5px;
+                ">
+                  BOOKING REFERENCE
+                </div>
+
+                <div style="
+                  font-size:24px;
+                  font-weight:bold;
+                  color:#111;
+                ">
+                  ${bookingReference}
+                </div>
+              </div>
+
+              <h2 style="
+                font-size:20px;
+                margin-top:30px;
+                color:#111;
+              ">
+                Reservation Details
+              </h2>
+
+              <table style="
+                width:100%;
+                border-collapse:collapse;
+                margin:15px 0 25px;
+              ">
+
+                <tr>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    <strong>Room</strong>
+                  </td>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    ${roomDescription}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    <strong>Check-in</strong>
+                  </td>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    ${payload.checkIn}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    <strong>Check-out</strong>
+                  </td>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    ${payload.checkOut}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    <strong>Nights</strong>
+                  </td>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    ${nights}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    <strong>Guests</strong>
+                  </td>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    ${adults} adult(s), ${children} child(ren)
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    <strong>Room total</strong>
+                  </td>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    ${formatMoney(roomTotal)}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    <strong>Breakfast</strong>
+                  </td>
+                  <td style="padding:11px;border-bottom:1px solid #eee;">
+                    ${
+                      payload.breakfast
+                        ? formatMoney(breakfastTotal)
+                        : "Not included"
+                    }
+                  </td>
+                </tr>
+
+              </table>
+
+              <div style="
+                background:#111111;
+                color:#ffffff;
+                padding:20px;
+                border-radius:10px;
+                margin:25px 0;
+              ">
+
+                <div style="
+                  font-size:13px;
+                  color:#d4b16f;
+                  margin-bottom:7px;
+                  text-transform:uppercase;
+                ">
+                  Amount Due
+                </div>
+
+                <div style="
+                  font-size:30px;
+                  font-weight:bold;
+                ">
+                  ${formatMoney(grandTotal)}
+                </div>
+
+              </div>
+
+              <div style="
+                border:2px solid #d4b16f;
+                border-radius:12px;
+                padding:24px;
+                margin-top:30px;
+              ">
+
+                <h2 style="
+                  margin:0 0 15px;
+                  color:#111;
+                  font-size:21px;
+                ">
+                  Payment Details
+                </h2>
+
+                <p style="
+                  line-height:1.7;
+                  margin-top:0;
+                ">
+                  If you have not yet made payment,
+                  please make payment using the banking
+                  details below.
+                </p>
+
+                <table style="
+                  width:100%;
+                  border-collapse:collapse;
+                  margin:18px 0;
+                ">
+
+                  <tr>
+                    <td style="padding:8px 0;">
+                      <strong>Bank</strong>
+                    </td>
+                    <td style="padding:8px 0;">
+                      FNB
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding:8px 0;">
+                      <strong>Account Name</strong>
+                    </td>
+                    <td style="padding:8px 0;">
+                      Godmill
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding:8px 0;">
+                      <strong>Account Number</strong>
+                    </td>
+                    <td style="padding:8px 0;">
+                      62836688616
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding:8px 0;">
+                      <strong>Account Type</strong>
+                    </td>
+                    <td style="padding:8px 0;">
+                      Current Account
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding:8px 0;">
+                      <strong>Payment Reference</strong>
+                    </td>
+                    <td style="
+                      padding:8px 0;
+                      font-weight:bold;
+                      color:#9b762f;
+                    ">
+                      ${bookingReference}
+                    </td>
+                  </tr>
+
+                </table>
+
+                <p style="
+                  line-height:1.7;
+                  margin-bottom:0;
+                ">
+                  Please use
+                  <strong>${bookingReference}</strong>
+                  as your payment reference so that we
+                  can identify your payment.
+                </p>
+
+              </div>
+
+              <div style="
+                background:#fff8e8;
+                padding:18px;
+                border-radius:10px;
+                margin-top:20px;
+                line-height:1.7;
+              ">
+                <strong>Important:</strong>
+                Your booking is currently
+                <strong>pending</strong>.
+                Your reservation will be confirmed once
+                payment has been received and verified.
+              </div>
+
+              <p style="
+                margin-top:25px;
+                line-height:1.7;
+              ">
+                After making payment, please upload your
+                proof of payment through the booking page
+                or contact Godmill City Guesthouse for
+                assistance.
+              </p>
+
+              <div style="
+                margin-top:30px;
+                padding-top:22px;
+                border-top:1px solid #eeeeee;
+                line-height:1.8;
+              ">
+
+                <strong>Godmill City Guesthouse</strong><br>
+                Taung, North West<br>
+                Tel: 079 058 2637<br>
+                Email:
+                bookings@godmillcityguesthouse.com
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      `;
+
+      if (payload.email?.trim()) {
+        const {
+          error: guestEmailError,
+        } = await resend.emails.send({
+          from:
+            "Godmill City Guesthouse <bookings@godmillcityguesthouse.com>",
+
+          to: [
+            payload.email.trim(),
+          ],
+
+          replyTo:
+            "bookings@godmillcityguesthouse.com",
+
+          subject:
+            `Booking received - ${bookingReference}`,
+
+          html:
+            bookingDetailsHtml,
+        });
+
+        if (guestEmailError) {
+          console.error(
+            "GUEST BOOKING EMAIL ERROR:",
+            guestEmailError
+          );
+        }
+      }
+
+      // -------------------------------------------
+      // GODMILL INTERNAL BOOKING NOTIFICATION
+      // -------------------------------------------
+
+      const {
+        error: adminEmailError,
+      } = await resend.emails.send({
+        from:
+          "Godmill Booking System <bookings@godmillcityguesthouse.com>",
+
+        to: [
+          "godmillcity547@gmail.com",
+        ],
+
+        replyTo:
+          payload.email?.trim() ||
+          "bookings@godmillcityguesthouse.com",
+
+        subject:
+          `New booking - ${bookingReference} - ${payload.guestName.trim()}`,
+
+        html: `
+          <div style="
+            font-family:Arial,Helvetica,sans-serif;
+            max-width:650px;
+            margin:auto;
+            color:#222;
+          ">
+
+            <div style="
+              background:#111;
+              padding:25px;
+            ">
+              <h1 style="
+                margin:0;
+                color:#d4b16f;
+              ">
+                New Godmill Booking
+              </h1>
+            </div>
+
+            <div style="
+              padding:25px;
+              border:1px solid #eee;
+            ">
+
+              <p>
+                <strong>Reference:</strong>
+                ${bookingReference}
+              </p>
+
+              <p>
+                <strong>Guest:</strong>
+                ${payload.guestName.trim()}
+              </p>
+
+              <p>
+                <strong>Phone:</strong>
+                ${payload.phone.trim()}
+              </p>
+
+              <p>
+                <strong>Email:</strong>
+                ${
+                  payload.email?.trim() ||
+                  "Not supplied"
+                }
+              </p>
+
+              <p>
+                <strong>Room:</strong>
+                ${roomDescription}
+              </p>
+
+              <p>
+                <strong>Room number:</strong>
+                ${assignedRoom.room_number}
+              </p>
+
+              <p>
+                <strong>Check-in:</strong>
+                ${payload.checkIn}
+              </p>
+
+              <p>
+                <strong>Check-out:</strong>
+                ${payload.checkOut}
+              </p>
+
+              <p>
+                <strong>Nights:</strong>
+                ${nights}
+              </p>
+
+              <p>
+                <strong>Guests:</strong>
+                ${adults} adult(s),
+                ${children} child(ren)
+              </p>
+
+              <p>
+                <strong>Breakfast:</strong>
+                ${
+                  payload.breakfast
+                    ? "Yes"
+                    : "No"
+                }
+              </p>
+
+              <div style="
+                background:#f7f1e5;
+                padding:18px;
+                margin:20px 0;
+                border-left:4px solid #d4b16f;
+              ">
+                <strong>Amount Due:</strong>
+                ${formatMoney(grandTotal)}
+              </div>
+
+              <p>
+                <strong>Payment Reference:</strong>
+                ${bookingReference}
+              </p>
+
+              <p>
+                <strong>Status:</strong>
+                Pending
+              </p>
+
+              ${
+                payload.specialRequests?.trim()
+                  ? `
+                    <p>
+                      <strong>Special requests:</strong>
+                      ${payload.specialRequests.trim()}
+                    </p>
+                  `
+                  : ""
+              }
+
+            </div>
+          </div>
+        `,
+      });
+
+      if (adminEmailError) {
+        console.error(
+          "ADMIN BOOKING EMAIL ERROR:",
+          adminEmailError
+        );
+      }
+    } catch (emailError) {
+      // A valid booking must remain successful even
+      // if the email provider is temporarily unavailable.
+      console.error(
+        "BOOKING EMAIL NOTIFICATION ERROR:",
+        emailError
+      );
+    }
+
+    // ---------------------------------------------
     // IMPORTANT:
     // Do NOT mark a future room "reserved" here.
     //
     // rooms.status represents its CURRENT
-    // operational state. The booking dates are
-    // what reserve it for future dates.
+    // operational state. Booking dates reserve
+    // the room for future dates.
     // ---------------------------------------------
 
     return NextResponse.json({
@@ -491,12 +1020,16 @@ export async function POST(request: Request) {
 
       room: {
         id: assignedRoom.id,
+
         room_number:
           assignedRoom.room_number,
+
         room_type:
           assignedRoom.room_type,
+
         price:
           Number(assignedRoom.price),
+
         capacity:
           assignedRoom.capacity,
       },
@@ -518,6 +1051,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
+
         message:
           error instanceof Error
             ? error.message

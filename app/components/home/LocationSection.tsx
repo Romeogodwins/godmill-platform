@@ -35,7 +35,7 @@ export default function LocationSection() {
               </p>
 
               <p>
-                ✉ info@godmillcityguesthouse.co.za
+                ✉ bookings@godmillcityguesthouse.com
               </p>
 
               <p>
