@@ -5,9 +5,13 @@ import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/20 backdrop-blur-xl">
+    <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-black/20 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-10">
-        <Link href="/" className="flex items-center">
+        <Link
+          href="/"
+          className="flex items-center"
+          aria-label="Godmill City Guesthouse home"
+        >
           <Image
             src="/logo.png.jpeg"
             alt="Godmill City Guesthouse"
@@ -17,12 +21,51 @@ export default function Navbar() {
           />
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm font-medium text-white md:flex">
-          <Link href="/">Home</Link>
-          <a href="#rooms">Rooms</a>
-          <a href="#gallery">Gallery</a>
-          <a href="#amenities">Amenities</a>
-          <a href="#contact">Contact</a>
+        <nav
+          className="hidden items-center gap-6 text-sm font-medium text-white md:flex lg:gap-8"
+          aria-label="Main navigation"
+        >
+          <Link
+            href="/"
+            className="transition hover:text-[#d4b16f]"
+          >
+            Home
+          </Link>
+
+          <Link
+            href="/accommodation-taung"
+            className="transition hover:text-[#d4b16f]"
+          >
+            Accommodation
+          </Link>
+
+          <Link
+            href="/#rooms"
+            className="transition hover:text-[#d4b16f]"
+          >
+            Rooms
+          </Link>
+
+          <Link
+            href="/#gallery"
+            className="transition hover:text-[#d4b16f]"
+          >
+            Gallery
+          </Link>
+
+          <Link
+            href="/#amenities"
+            className="transition hover:text-[#d4b16f]"
+          >
+            Amenities
+          </Link>
+
+          <Link
+            href="/#contact"
+            className="transition hover:text-[#d4b16f]"
+          >
+            Contact
+          </Link>
         </nav>
 
         <Link
