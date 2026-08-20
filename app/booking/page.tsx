@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import {
@@ -28,6 +28,7 @@ const initialForm: BookingFormState = {
   aircon: "Aircon",
   breakfast: false,
   guestName: "",
+  companyName: "",
   email: "",
   phone: "",
   specialRequests: "",
@@ -309,10 +310,15 @@ return result.room;
             aircon: form.aircon,
             breakfast: form.breakfast,
             guestName: form.guestName,
+            companyName: form.companyName,
             email: form.email,
             phone: form.phone,
             specialRequests:
               form.specialRequests,
+            bookingSource:
+              new URLSearchParams(window.location.search).get("source") ||
+              new URLSearchParams(window.location.search).get("utm_source") ||
+              "website",
           }),
         }
       );

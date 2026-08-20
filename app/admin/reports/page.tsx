@@ -16,6 +16,8 @@ interface Summary {
   monthlyProfit: number;
   totalNights: number;
   averageBookingValue: number;
+  averageDailyRate: number;
+  revparSnapshot: number;
   occupancyRate: number;
 }
 
@@ -44,6 +46,11 @@ interface RoomStatus {
 interface ExpenseBreakdown {
   category: string;
   amount: number;
+}
+
+interface BookingSourceBreakdown {
+  source: string;
+  bookings: number;
 }
 
 interface RoomPerformance {
@@ -90,6 +97,7 @@ interface ReportsData {
   bookingStatus: BookingStatus;
   roomStatus: RoomStatus;
   expenseBreakdown: ExpenseBreakdown[];
+  bookingSourceBreakdown: BookingSourceBreakdown[];
   roomPerformance: RoomPerformance[];
   bookingBalances: BookingBalance[];
   bookings: Booking[];
@@ -258,6 +266,8 @@ export default function ReportsPage() {
 
         <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           <SmallMetric label="Total Bookings" value={String(summary.totalBookings)} />
+          <SmallMetric label="ADR" value={money(summary.averageDailyRate)} valueClass="text-[#d4b16f]" />
+          <SmallMetric label="RevPAR Snapshot" value={money(summary.revparSnapshot)} valueClass="text-blue-400" />
           <SmallMetric label="Nights Booked" value={String(summary.totalNights)} />
           <SmallMetric label="Occupancy" value={`${summary.occupancyRate}%`} valueClass="text-emerald-400" />
           <SmallMetric label="Average Booking" value={money(summary.averageBookingValue)} />
@@ -359,6 +369,23 @@ export default function ReportsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-3xl border border-white/10 bg-[#121212] p-7">
+          <h2 className="text-2xl font-bold">Booking Sources</h2>
+          <p className="mt-2 text-sm text-gray-500">Measure direct bookings and the channels that generate reservations.</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {(data.bookingSourceBreakdown ?? []).length === 0 ? (
+              <p className="text-sm text-gray-500">No booking source data yet.</p>
+            ) : (
+              data.bookingSourceBreakdown.map((item) => (
+                <div key={item.source} className="rounded-2xl bg-black/50 p-4">
+                  <p className="text-sm capitalize text-gray-400">{item.source.replace(/[-_]/g, " ")}</p>
+                  <p className="mt-2 text-2xl font-bold text-[#d4b16f]">{item.bookings}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

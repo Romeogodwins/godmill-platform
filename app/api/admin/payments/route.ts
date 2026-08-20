@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "../../../../lib/supabase/server";
+import { sendPaymentReceiptEmail } from "../../../../lib/email/godmill";
 
 export const dynamic = "force-dynamic";
 
@@ -209,7 +210,14 @@ export async function POST(request: Request) {
       .select(`
         id,
         booking_reference,
-        grand_total
+        guest_name,
+        email,
+        phone,
+        room_type,
+        check_in,
+        check_out,
+        grand_total,
+        status
       `)
       .eq("id", bookingId)
       .single();
@@ -322,6 +330,51 @@ export async function POST(request: Request) {
         : totalPaid > 0
         ? "partially-paid"
         : "unpaid";
+
+    // Keep the booking workflow synchronized with the authoritative payment ledger.
+    // A full manual payment recorded by reception is trusted and confirms a pending booking.
+    if (balance <= 0) {
+      const bookingUpdate: { payment_status: string; status?: string } = {
+        payment_status: "verified",
+      };
+
+      if ((booking as { status?: string }).status === "pending") {
+        bookingUpdate.status = "confirmed";
+      }
+
+      const { error: bookingSyncError } = await supabase
+        .from("bookings")
+        .update(bookingUpdate)
+        .eq("id", bookingId);
+
+      if (bookingSyncError) {
+        console.error("PAYMENT BOOKING SYNC ERROR:", bookingSyncError);
+        return NextResponse.json(
+          { success: false, message: bookingSyncError.message },
+          { status: 500 }
+        );
+      }
+    }
+
+    try {
+      await sendPaymentReceiptEmail({
+        bookingReference: booking.booking_reference,
+        guestName: booking.guest_name,
+        email: booking.email,
+        phone: booking.phone,
+        roomType: booking.room_type,
+        checkIn: booking.check_in,
+        checkOut: booking.check_out,
+        grandTotal,
+        paymentAmount: amount,
+        totalPaid,
+        balance,
+        paymentMethod,
+        paymentReference,
+      });
+    } catch (emailError) {
+      console.error("PAYMENT RECEIPT EMAIL ERROR:", emailError);
+    }
 
     return NextResponse.json({
       success: true,

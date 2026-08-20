@@ -7,9 +7,6 @@ interface Room {
   room_number: string;
   room_type: string;
   status: string;
-  payment_status: string | null;
-  proof_of_payment_url: string | null;
-  proof_uploaded_at: string | null;
 }
 
 interface Booking {
@@ -31,8 +28,20 @@ interface Booking {
   breakfast_total: number;
   grand_total: number;
   special_requests: string;
+  booking_source?: string | null;
+  company_name?: string | null;
+  rate_plan?: string | null;
+  discount_amount?: number | null;
+  deposit_required?: number | null;
   status: string;
   payment_status: string | null;
+
+  // V2.1 payment integrity fields
+  total_paid?: number;
+  balance?: number;
+  collection_status?: "paid" | "partially-paid" | "unpaid";
+  payment_verified_at?: string | null;
+
   proof_of_payment_url: string | null;
   proof_uploaded_at: string | null;
   created_at: string;
@@ -225,14 +234,6 @@ export default function BookingsPage() {
   function renderPayment(booking: Booking) {
     const working = updatingId === booking.id;
 
-    if (booking.payment_status === "verified") {
-      return (
-        <span className="inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400">
-          Payment Verified
-        </span>
-      );
-    }
-
     if (
       booking.payment_status === "proof_received" &&
       booking.proof_of_payment_url
@@ -243,10 +244,7 @@ export default function BookingsPage() {
             type="button"
             disabled={working}
             onClick={() =>
-              handlePaymentAction(
-                booking,
-                "view-proof"
-              )
+              handlePaymentAction(booking, "view-proof")
             }
             className="rounded-full border border-[#d4b16f]/40 px-3 py-2 text-xs font-semibold text-[#d4b16f] disabled:opacity-50"
           >
@@ -257,27 +255,75 @@ export default function BookingsPage() {
             type="button"
             disabled={working}
             onClick={() =>
-              handlePaymentAction(
-                booking,
-                "verify"
-              )
+              handlePaymentAction(booking, "verify")
             }
             className="rounded-full bg-emerald-500 px-3 py-2 text-xs font-semibold text-black disabled:opacity-50"
           >
-            {working
-              ? "Updating..."
-              : "Verify Payment"}
+            {working ? "Updating..." : "Verify Payment"}
           </button>
         </div>
       );
     }
 
+    const collection =
+      booking.collection_status ||
+      (booking.payment_status === "verified"
+        ? "paid"
+        : "unpaid");
+
+    if (collection === "paid") {
+      return (
+        <div>
+          <span className="inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400">
+            Paid
+          </span>
+
+          <p className="mt-1 text-[11px] text-gray-500">
+            Balance R0
+          </p>
+        </div>
+      );
+    }
+
+    if (collection === "partially-paid") {
+      return (
+        <div>
+          <span className="inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-300">
+            Part Paid
+          </span>
+
+          <p className="mt-1 text-[11px] text-gray-500">
+            Paid R
+            {Number(
+              booking.total_paid || 0
+            ).toLocaleString("en-ZA")}{" "}
+            · Balance R
+            {Number(
+              booking.balance || 0
+            ).toLocaleString("en-ZA")}
+          </p>
+        </div>
+      );
+    }
+
     return (
-      <span className="inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-400">
-        Awaiting Payment
-      </span>
+      <div>
+        <span className="inline-flex rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-300">
+          Unpaid
+        </span>
+
+        <p className="mt-1 text-[11px] text-gray-500">
+          Balance R
+          {Number(
+            booking.balance ??
+              booking.grand_total ??
+              0
+          ).toLocaleString("en-ZA")}
+        </p>
+      </div>
     );
   }
+
   function statusStyle(status: string) {
     switch (status.toLowerCase()) {
       case "confirmed":
@@ -312,22 +358,26 @@ export default function BookingsPage() {
       return "—";
     }
 
-    return new Date(`${date}T00:00:00`).toLocaleDateString(
-      "en-ZA",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }
-    );
+    return new Date(
+      `${date}T00:00:00`
+    ).toLocaleDateString("en-ZA", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   }
 
   function getLocalDateString() {
     const now = new Date();
 
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
+    const month = String(
+      now.getMonth() + 1
+    ).padStart(2, "0");
+    const day = String(now.getDate()).padStart(
+      2,
+      "0"
+    );
 
     return `${year}-${month}-${day}`;
   }
@@ -385,15 +435,21 @@ export default function BookingsPage() {
               type="button"
               disabled={working}
               onClick={() =>
-                handleAction(booking, "check-in")
+                handleAction(
+                  booking,
+                  "check-in"
+                )
               }
               className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {working ? "Updating..." : "Check In"}
+              {working
+                ? "Updating..."
+                : "Check In"}
             </button>
           ) : (
             <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-xs font-semibold text-blue-300">
-              Check-in available {formatDate(booking.check_in)}
+              Check-in available{" "}
+              {formatDate(booking.check_in)}
             </span>
           )}
 
@@ -450,10 +506,13 @@ export default function BookingsPage() {
   }
 
   const totalValue = bookings
-    .filter((booking) => booking.status !== "cancelled")
+    .filter(
+      (booking) => booking.status !== "cancelled"
+    )
     .reduce(
       (total, booking) =>
-        total + Number(booking.grand_total || 0),
+        total +
+        Number(booking.grand_total || 0),
       0
     );
 
@@ -476,7 +535,7 @@ export default function BookingsPage() {
           </div>
 
           <a
-            href="/booking"
+            href="/booking?source=reception"
             className="inline-flex items-center justify-center rounded-full bg-[#d4b16f] px-6 py-3 font-semibold text-black transition hover:opacity-90"
           >
             + New Booking
@@ -606,7 +665,9 @@ export default function BookingsPage() {
                     >
                       <td className="px-6 py-5">
                         <p className="font-semibold text-[#d4b16f]">
-                          {booking.booking_reference}
+                          {
+                            booking.booking_reference
+                          }
                         </p>
 
                         <p className="mt-1 text-xs text-gray-500">
@@ -622,8 +683,22 @@ export default function BookingsPage() {
                           {booking.guest_name}
                         </p>
 
+                        {booking.company_name ? (
+                          <p className="mt-1 text-xs text-[#d4b16f]">
+                            {booking.company_name}
+                          </p>
+                        ) : null}
+
                         <p className="mt-1 text-xs text-gray-500">
                           {booking.phone}
+                        </p>
+
+                        <p className="mt-1 text-[11px] capitalize text-gray-600">
+                          Source:{" "}
+                          {(
+                            booking.booking_source ||
+                            "website"
+                          ).replace(/[-_]/g, " ")}
                         </p>
                       </td>
 
@@ -631,7 +706,10 @@ export default function BookingsPage() {
                         {booking.rooms ? (
                           <>
                             <p className="font-semibold">
-                              {booking.rooms.room_number}
+                              {
+                                booking.rooms
+                                  .room_number
+                              }
                             </p>
 
                             <p className="mt-1 text-xs text-gray-500">
@@ -676,7 +754,8 @@ export default function BookingsPage() {
 
                         {booking.children > 0 && (
                           <p className="mt-1 text-xs text-gray-500">
-                            {booking.children} child
+                            {booking.children}{" "}
+                            child
                             {booking.children !== 1
                               ? "ren"
                               : ""}

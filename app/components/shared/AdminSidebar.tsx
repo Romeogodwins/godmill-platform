@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const operationsMenu = [
   { title: "Dashboard", href: "/admin" },
   { title: "Reception", href: "/admin/reception" },
+  { title: "Room Planner", href: "/admin/planner" },
   { title: "Bookings", href: "/admin/bookings" },
   { title: "Rooms", href: "/admin/rooms" },
   { title: "Guests", href: "/admin/guests" },

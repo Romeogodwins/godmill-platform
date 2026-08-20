@@ -197,7 +197,7 @@ export default function AdminDashboard() {
             </button>
 
             <Link
-              href="/booking"
+              href="/booking?source=reception"
               className="rounded-full bg-[#d4b16f] px-6 py-3 font-semibold text-black transition hover:scale-[1.02]"
             >
               + New Booking

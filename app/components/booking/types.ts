@@ -10,6 +10,7 @@ export interface BookingFormState {
   aircon: AirconPreference;
   breakfast: boolean;
   guestName: string;
+  companyName: string;
   email: string;
   phone: string;
   specialRequests: string;

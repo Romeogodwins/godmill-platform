@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "../../../../lib/supabase/admin";
+import { sendProofUploadedAdminEmail } from "../../../../lib/email/godmill";
 
 export const dynamic = "force-dynamic";
 
@@ -9,15 +10,22 @@ const ALLOWED_TYPES = [
   "image/png",
 ];
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE =
+  5 * 1024 * 1024;
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
+    const formData =
+      await request.formData();
 
-    const bookingId = formData.get("bookingId");
-    const bookingReference = formData.get("bookingReference");
-    const file = formData.get("file");
+    const bookingId =
+      formData.get("bookingId");
+
+    const bookingReference =
+      formData.get("bookingReference");
+
+    const file =
+      formData.get("file");
 
     if (
       typeof bookingId !== "string" ||
@@ -27,7 +35,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Booking information and proof of payment are required.",
+          message:
+            "Booking information and proof of payment are required.",
         },
         { status: 400 }
       );
@@ -37,7 +46,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Please upload a PDF, JPG or PNG file.",
+          message:
+            "Please upload a PDF, JPG or PNG file.",
         },
         { status: 400 }
       );
@@ -47,46 +57,74 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Proof of payment must be 5MB or smaller.",
+          message:
+            "Proof of payment must be 5MB or smaller.",
         },
         { status: 400 }
       );
     }
 
-    const supabase = createSupabaseAdminClient();
+    const supabase =
+      createSupabaseAdminClient();
 
-    const { data: booking, error: bookingError } = await supabase
+    const {
+      data: booking,
+      error: bookingError,
+    } = await supabase
       .from("bookings")
-      .select("id, booking_reference")
+      .select(`
+        id,
+        booking_reference,
+        guest_name,
+        email,
+        phone,
+        room_type,
+        check_in,
+        check_out,
+        grand_total
+      `)
       .eq("id", bookingId)
-      .eq("booking_reference", bookingReference)
+      .eq(
+        "booking_reference",
+        bookingReference
+      )
       .single();
 
     if (bookingError || !booking) {
       return NextResponse.json(
         {
           success: false,
-          message: "Booking could not be found.",
+          message:
+            "Booking could not be found.",
         },
         { status: 404 }
       );
     }
 
     const extension =
-      file.name.split(".").pop()?.toLowerCase() ||
-      (file.type === "application/pdf" ? "pdf" : "jpg");
+      file.name
+        .split(".")
+        .pop()
+        ?.toLowerCase() ||
+      (file.type === "application/pdf"
+        ? "pdf"
+        : "jpg");
 
-    const safeReference = bookingReference.replace(
-      /[^a-zA-Z0-9-_]/g,
-      ""
-    );
+    const safeReference =
+      bookingReference.replace(
+        /[^a-zA-Z0-9-_]/g,
+        ""
+      );
 
     const filePath =
       `${safeReference}/${Date.now()}-proof.${extension}`;
 
-    const bytes = await file.arrayBuffer();
+    const bytes =
+      await file.arrayBuffer();
 
-    const { error: uploadError } = await supabase.storage
+    const {
+      error: uploadError,
+    } = await supabase.storage
       .from("payment-proofs")
       .upload(filePath, bytes, {
         contentType: file.type,
@@ -94,28 +132,40 @@ export async function POST(request: Request) {
       });
 
     if (uploadError) {
-      console.error("PROOF UPLOAD ERROR:", uploadError);
+      console.error(
+        "PROOF UPLOAD ERROR:",
+        uploadError
+      );
 
       return NextResponse.json(
         {
           success: false,
-          message: uploadError.message,
+          message:
+            uploadError.message,
         },
         { status: 500 }
       );
     }
 
-    const { error: updateError } = await supabase
+    const {
+      error: updateError,
+    } = await supabase
       .from("bookings")
       .update({
-        payment_status: "proof_received",
-        proof_of_payment_url: filePath,
-        proof_uploaded_at: new Date().toISOString(),
+        payment_status:
+          "proof_received",
+        proof_of_payment_url:
+          filePath,
+        proof_uploaded_at:
+          new Date().toISOString(),
       })
       .eq("id", bookingId);
 
     if (updateError) {
-      console.error("BOOKING PROOF UPDATE ERROR:", updateError);
+      console.error(
+        "BOOKING PROOF UPDATE ERROR:",
+        updateError
+      );
 
       await supabase.storage
         .from("payment-proofs")
@@ -124,9 +174,38 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Proof uploaded, but the booking could not be updated.",
+          message:
+            "Proof uploaded, but the booking could not be updated.",
         },
         { status: 500 }
+      );
+    }
+
+    try {
+      await sendProofUploadedAdminEmail({
+        bookingReference:
+          booking.booking_reference,
+        guestName:
+          booking.guest_name,
+        email:
+          booking.email,
+        phone:
+          booking.phone,
+        roomType:
+          booking.room_type,
+        checkIn:
+          booking.check_in,
+        checkOut:
+          booking.check_out,
+        grandTotal:
+          Number(
+            booking.grand_total ?? 0
+          ),
+      });
+    } catch (emailError) {
+      console.error(
+        "PROOF UPLOAD EMAIL ERROR:",
+        emailError
       );
     }
 
@@ -136,7 +215,10 @@ export async function POST(request: Request) {
         "Proof of payment uploaded successfully. Your payment is awaiting verification.",
     });
   } catch (error) {
-    console.error("PROOF OF PAYMENT ERROR:", error);
+    console.error(
+      "PROOF OF PAYMENT ERROR:",
+      error
+    );
 
     return NextResponse.json(
       {

@@ -160,6 +160,21 @@ export default function BookingForm({
           </div>
 
           <div>
+            <label htmlFor="companyName" className="mb-2 block text-sm font-semibold text-gray-200">
+              Company / Organisation <span className="font-normal text-gray-500">(optional)</span>
+            </label>
+            <input
+              id="companyName"
+              name="companyName"
+              type="text"
+              value={form.companyName}
+              onChange={onChange}
+              className="w-full rounded-2xl border border-white/10 bg-[#0f0f0f] px-4 py-3 text-white outline-none transition focus:border-[#d4b16f]"
+              placeholder="For company or contractor bookings"
+            />
+          </div>
+
+          <div>
             <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-200">
               Email
             </label>

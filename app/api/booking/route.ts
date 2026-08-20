@@ -25,6 +25,10 @@ interface BookingPayload {
   phone: string;
 
   specialRequests: string;
+
+  bookingSource?: string;
+  companyName?: string;
+  ratePlan?: string;
 }
 
 export async function POST(request: Request) {
@@ -431,6 +435,18 @@ export async function POST(request: Request) {
           payload.specialRequests?.trim() ||
           null,
 
+        booking_source:
+          payload.bookingSource?.trim() ||
+          "website",
+
+        company_name:
+          payload.companyName?.trim() ||
+          null,
+
+        rate_plan:
+          payload.ratePlan?.trim() ||
+          "standard",
+
         status: "pending",
       })
       .select(`
@@ -459,12 +475,24 @@ export async function POST(request: Request) {
         bookingError
       );
 
+      // Clean up the guest row created for a booking that did not complete.
+      await supabase
+        .from("guests")
+        .delete()
+        .eq("id", guestData.id);
+
+      const isDoubleBooking =
+        bookingError.code === "23P01" ||
+        bookingError.message?.includes("ROOM_DOUBLE_BOOKING");
+
       return NextResponse.json(
         {
           success: false,
-          message: bookingError.message,
+          message: isDoubleBooking
+            ? "That room was just taken for the selected dates. Please try again and we will allocate another available room."
+            : bookingError.message,
         },
-        { status: 500 }
+        { status: isDoubleBooking ? 409 : 500 }
       );
     }
 

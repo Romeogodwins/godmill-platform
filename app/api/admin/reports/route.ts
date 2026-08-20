@@ -27,6 +27,7 @@ export async function GET() {
           breakfast_total,
           grand_total,
           status,
+          booking_source,
           created_at,
           rooms (
             room_number
@@ -283,6 +284,25 @@ export async function GET() {
           )
         : 0;
 
+    const averageDailyRate =
+      totalNights > 0
+        ? Number((roomRevenue / totalNights).toFixed(2))
+        : 0;
+
+    const revparSnapshot = Number(
+      (averageDailyRate * (occupancyRate / 100)).toFixed(2)
+    );
+
+    const bookingSourceTotals: Record<string, number> = {};
+    allBookings.forEach((booking) => {
+      const source = (booking.booking_source || "website").trim() || "website";
+      bookingSourceTotals[source] = (bookingSourceTotals[source] || 0) + 1;
+    });
+
+    const bookingSourceBreakdown = Object.entries(bookingSourceTotals)
+      .map(([source, bookings]) => ({ source, bookings }))
+      .sort((a, b) => b.bookings - a.bookings);
+
     // ---------------------------------------------------------
     // PAYMENT STATUS
     // ---------------------------------------------------------
@@ -435,6 +455,8 @@ export async function GET() {
 
         totalNights,
         averageBookingValue,
+        averageDailyRate,
+        revparSnapshot,
         occupancyRate,
       },
 
@@ -462,6 +484,7 @@ export async function GET() {
       },
 
       expenseBreakdown,
+      bookingSourceBreakdown,
       roomPerformance,
       bookingBalances,
 
