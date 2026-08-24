@@ -1,5 +1,6 @@
 ﻿import Link from "next/link";
 import RankingGrowthSection from "./RankingGrowthSection";
+import LiveSearchConsolePanel from "./LiveSearchConsolePanel";
 
 import {
   getSeoOverview,
@@ -240,6 +241,8 @@ export default async function SeoDashboardPage() {
         rankings={overview.rankings}
         summary={overview.rankingSummary}
       />
+
+      <LiveSearchConsolePanel />
 
       <section className="mt-12">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -525,4 +528,5 @@ export default async function SeoDashboardPage() {
     </div>
   );
 }
+
 

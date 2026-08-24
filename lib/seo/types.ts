@@ -1,4 +1,4 @@
-export type SeoSeverity =
+﻿export type SeoSeverity =
   | "critical"
   | "high"
   | "medium"
@@ -49,7 +49,7 @@ export interface SeoRanking {
   action: SeoRankingAction;
   priority: SeoSeverity;
   note: string;
-  source: "search-console-baseline";
+  source: "search-console-baseline" | "google-search-console-live";
   measuredAt: string;
 }
 
@@ -129,3 +129,4 @@ export interface SeoOverview {
   rankingSummary: SeoRankingSummary;
   generatedAt: string;
 }
+
