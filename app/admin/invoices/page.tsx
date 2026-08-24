@@ -246,6 +246,18 @@ export default function InvoicesPage() {
     doc.setFontSize(22);
     doc.text("INVOICE", 20, 60);
 
+    const watermark =
+      financials.paymentStatus === "Paid"
+        ? "PAID"
+        : financials.paymentStatus === "Partially Paid"
+          ? "PARTIALLY PAID"
+          : "UNPAID";
+
+    doc.setTextColor(225, 225, 225);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(watermark === "PARTIALLY PAID" ? 28 : 38);
+    doc.text(watermark, 105, 155, { align: "center", angle: 35 });
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(95, 95, 95);
@@ -342,10 +354,15 @@ export default function InvoicesPage() {
     y += 7;
     doc.setFont("helvetica", "bold");
     doc.text(
-      `Payment Reference: ${booking.guest_name || booking.booking_reference}`,
+      `Payment Reference: ${inv}`,
       22,
       y
     );
+
+    y += 7;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(45, 45, 45);
+    doc.text("Secure card payment: pay.yoco.com/godmillcity", 22, y);
 
     doc.setDrawColor(212, 177, 111);
     doc.line(20, 274, 190, 274);
@@ -388,7 +405,7 @@ export default function InvoicesPage() {
         <style>
           *{box-sizing:border-box}
           body{font-family:Arial,sans-serif;margin:0;padding:30px;background:#f4f4f4;color:#111}
-          .invoice{max-width:800px;margin:auto;background:#fff;border:1px solid #ddd}
+          .invoice{position:relative;max-width:800px;margin:auto;background:#fff;border:1px solid #ddd;overflow:hidden}
           .letterhead{background:#111;color:#fff;padding:24px 30px;border-bottom:5px solid #d4b16f;display:flex;align-items:center;justify-content:space-between;gap:30px}
           .brand{color:#d4b16f;font-size:26px;font-weight:800;letter-spacing:2px}
           .business{text-align:right;line-height:1.6;font-size:13px}
@@ -402,7 +419,7 @@ export default function InvoicesPage() {
           .label{color:#666}.value{font-weight:700;text-align:right}
           .total{margin-top:22px;padding:20px;background:#f7f4ed;border-radius:10px;font-size:21px;font-weight:800;display:flex;justify-content:space-between}
           .total span:first-child{color:#b58d45}
-          .footer{text-align:center;color:#666;font-size:12px;line-height:1.7;margin-top:35px;padding-top:18px;border-top:2px solid #d4b16f}
+          .watermark{position:absolute;top:43%;left:50%;transform:translate(-50%,-50%) rotate(-32deg);font-size:64px;font-weight:900;color:rgba(0,0,0,.06);white-space:nowrap;pointer-events:none}.footer{text-align:center;color:#666;font-size:12px;line-height:1.7;margin-top:35px;padding-top:18px;border-top:2px solid #d4b16f}
           @media print{
             body{padding:0;background:#fff}
             .invoice{border:none}
@@ -412,6 +429,7 @@ export default function InvoicesPage() {
       </head>
       <body>
         <div class="invoice">
+          <div class="watermark">${financials.paymentStatus.toUpperCase()}</div>
           <div class="letterhead">
             <div class="brand">GODMILL</div>
             <div class="business">
@@ -458,7 +476,8 @@ export default function InvoicesPage() {
             <div class="row"><span class="label">Account Name</span><span class="value">Godmill</span></div>
             <div class="row"><span class="label">Account Number</span><span class="value">62836688616</span></div>
             <div class="row"><span class="label">Account Type</span><span class="value">Current</span></div>
-            <div class="row"><span class="label">Payment Reference</span><span class="value">${booking.guest_name || booking.booking_reference}</span></div>
+            <div class="row"><span class="label">Payment Reference</span><span class="value">${inv}</span></div>
+            <div class="row"><span class="label">Secure Card Payment</span><span class="value">pay.yoco.com/godmillcity</span></div>
 
             <div class="footer">
               <strong>Godmill City Guesthouse</strong><br>
@@ -503,6 +522,9 @@ export default function InvoicesPage() {
       `AMOUNT PAID: ${money(financials.paid)}`,
       `BALANCE DUE: ${money(financials.balance)}`,
       `PAYMENT STATUS: ${financials.paymentStatus.toUpperCase()}`,
+      "",
+      `Payment reference: ${invoiceNumber(booking)}`,
+      "Secure card payment: https://pay.yoco.com/godmillcity",
       "",
       "Tel: 079 058 2637",
       "Godmill City Guesthouse",
