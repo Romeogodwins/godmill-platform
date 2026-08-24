@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { createSupabaseAdminClient } from "../../lib/supabase/admin";
 
 export const metadata: Metadata = {
   title: "Photo Gallery | Godmill City Guesthouse Taung",
@@ -19,60 +20,213 @@ export const metadata: Metadata = {
   },
 };
 
-const galleryImages = [
+export const dynamic = "force-dynamic";
+
+interface GalleryImage {
+  id: string;
+  public_url: string;
+  title: string;
+  caption: string | null;
+  alt_text: string;
+  category: string;
+  is_featured: boolean;
+  is_cover: boolean;
+  sort_order: number;
+  created_at?: string;
+}
+
+const fallbackImages: GalleryImage[] = [
   {
-    src: "/Room 3.jpeg",
+    id: "fallback-executive",
+    public_url: "/Room 3.jpeg",
     title: "Executive Room",
-    alt: "Executive room at Godmill City Guesthouse in Taung",
+    caption: null,
+    alt_text: "Executive room at Godmill City Guesthouse in Taung",
+    category: "executive",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 101,
   },
   {
-    src: "/Room 2.jpeg",
+    id: "fallback-standard",
+    public_url: "/Room 2.jpeg",
     title: "Standard Room",
-    alt: "Standard room at Godmill City Guesthouse in Taung",
+    caption: null,
+    alt_text: "Standard room at Godmill City Guesthouse in Taung",
+    category: "standard-aircon",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 102,
   },
   {
-    src: "/Room 1.jpeg",
+    id: "fallback-family",
+    public_url: "/Room 1.jpeg",
     title: "Family Room",
-    alt: "Family three-sleeper room at Godmill City Guesthouse in Taung",
+    caption: null,
+    alt_text:
+      "Family three-sleeper room at Godmill City Guesthouse in Taung",
+    category: "family-aircon",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 103,
   },
   {
-    src: "/Room 5.jpeg",
+    id: "fallback-room-5",
+    public_url: "/Room 5.jpeg",
     title: "Guest Room",
-    alt: "Guest room at Godmill City Guesthouse in Taung",
+    caption: null,
+    alt_text: "Guest room at Godmill City Guesthouse in Taung",
+    category: "general",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 104,
   },
   {
-    src: "/Room 6.jpeg",
+    id: "fallback-room-6",
+    public_url: "/Room 6.jpeg",
     title: "Guest Room",
-    alt: "Comfortable guest room at Godmill City Guesthouse in Taung",
+    caption: null,
+    alt_text: "Comfortable guest room at Godmill City Guesthouse in Taung",
+    category: "general",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 105,
   },
   {
-    src: "/Room 10.jpeg",
+    id: "fallback-room-10",
+    public_url: "/Room 10.jpeg",
     title: "Guest Room",
-    alt: "Room interior at Godmill City Guesthouse in Taung",
+    caption: null,
+    alt_text: "Room interior at Godmill City Guesthouse in Taung",
+    category: "general",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 106,
   },
   {
-    src: "/Pool.jpeg",
+    id: "fallback-pool",
+    public_url: "/Pool.jpeg",
     title: "Swimming Pool",
-    alt: "Swimming pool at Godmill City Guesthouse in Taung",
+    caption: null,
+    alt_text: "Swimming pool at Godmill City Guesthouse in Taung",
+    category: "pool",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 107,
   },
   {
-    src: "/Courtyard.jpeg",
+    id: "fallback-courtyard",
+    public_url: "/Courtyard.jpeg",
     title: "Courtyard",
-    alt: "Courtyard at Godmill City Guesthouse in Taung",
+    caption: null,
+    alt_text: "Courtyard at Godmill City Guesthouse in Taung",
+    category: "courtyard",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 108,
   },
   {
-    src: "/Bathroom.jpeg",
+    id: "fallback-bathroom",
+    public_url: "/Bathroom.jpeg",
     title: "Private Bathroom",
-    alt: "Private bathroom at Godmill City Guesthouse in Taung",
+    caption: null,
+    alt_text: "Private bathroom at Godmill City Guesthouse in Taung",
+    category: "bathroom",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 109,
   },
   {
-    src: "/Dinning.jpeg",
+    id: "fallback-dining",
+    public_url: "/Dinning.jpeg",
     title: "Dining Area",
-    alt: "Dining area at Godmill City Guesthouse in Taung",
+    caption: null,
+    alt_text: "Dining area at Godmill City Guesthouse in Taung",
+    category: "general",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 110,
   },
 ];
 
-export default function GalleryPage() {
+const categoryLabels: Record<string, string> = {
+  general: "General",
+  executive: "Executive Room",
+  "standard-aircon": "Standard Room - Aircon",
+  "standard-non-aircon": "Standard Room - Non-Aircon",
+  "family-aircon": "Family Room - Aircon",
+  "family-non-aircon": "Family Room - Non-Aircon",
+  pool: "Swimming Pool",
+  bathroom: "Bathrooms",
+  exterior: "Exterior",
+  courtyard: "Courtyard",
+};
+
+async function getGalleryImages(): Promise<GalleryImage[]> {
+  try {
+    const supabase = createSupabaseAdminClient();
+
+    const { data, error } = await supabase
+      .from("gallery_images")
+      .select(`
+        id,
+        public_url,
+        title,
+        caption,
+        alt_text,
+        category,
+        is_featured,
+        is_cover,
+        sort_order,
+        created_at
+      `)
+      .eq("is_published", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("GALLERY PAGE DATABASE ERROR:", error);
+      return fallbackImages;
+    }
+
+    const uploadedImages = (data ?? []) as GalleryImage[];
+
+    if (uploadedImages.length === 0) {
+      return fallbackImages;
+    }
+
+    /*
+     * Keep the existing local photographs visible while the managed
+     * gallery is still being populated.
+     *
+     * Uploaded photographs always appear first.
+     */
+    return [...uploadedImages, ...fallbackImages];
+  } catch (error) {
+    console.error("GALLERY PAGE ERROR:", error);
+    return fallbackImages;
+  }
+}
+
+export default async function GalleryPage() {
+  const galleryImages = await getGalleryImages();
+
+  /*
+   * A photograph marked as COVER becomes the first large photograph.
+   */
+  const coverImage = galleryImages.find(
+    (image) => image.is_cover
+  );
+
+  const orderedImages = coverImage
+    ? [
+        coverImage,
+        ...galleryImages.filter(
+          (image) => image.id !== coverImage.id
+        ),
+      ]
+    : galleryImages;
+
   return (
     <main className="min-h-screen bg-[#080808] text-white">
       {/* HERO */}
@@ -136,9 +290,9 @@ export default function GalleryPage() {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {galleryImages.map((image, index) => (
+            {orderedImages.map((image, index) => (
               <figure
-                key={`${image.src}-${index}`}
+                key={image.id}
                 className={`group overflow-hidden rounded-3xl border border-white/10 bg-[#111] ${
                   index === 0 ? "sm:col-span-2" : ""
                 }`}
@@ -149,9 +303,14 @@ export default function GalleryPage() {
                   }`}
                 >
                   <Image
-                    src={image.src}
-                    alt={image.alt}
+                    src={image.public_url}
+                    alt={
+                      image.alt_text ||
+                      image.title ||
+                      "Godmill City Guesthouse"
+                    }
                     fill
+                    unoptimized
                     sizes={
                       index === 0
                         ? "(max-width: 1024px) 100vw, 66vw"
@@ -159,12 +318,29 @@ export default function GalleryPage() {
                     }
                     className="object-cover transition duration-700 group-hover:scale-105"
                   />
+
+                  {image.is_cover && (
+                    <div className="absolute left-4 top-4 rounded-full bg-[#d4b16f] px-4 py-2 text-xs font-bold uppercase tracking-wider text-black">
+                      Featured
+                    </div>
+                  )}
                 </div>
 
                 <figcaption className="p-5">
-                  <p className="font-semibold text-white">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d4b16f]">
+                    {categoryLabels[image.category] ??
+                      image.category}
+                  </p>
+
+                  <p className="mt-2 text-lg font-semibold text-white">
                     {image.title}
                   </p>
+
+                  {image.caption && (
+                    <p className="mt-2 text-sm leading-6 text-gray-400">
+                      {image.caption}
+                    </p>
+                  )}
                 </figcaption>
               </figure>
             ))}

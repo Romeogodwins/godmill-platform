@@ -25,17 +25,39 @@ export const metadata: Metadata = {
     "Godmill City Guesthouse",
   ],
 
-  authors: [
-    {
-      name: "Godmill City Guesthouse",
-    },
-  ],
-
+  authors: [{ name: "Godmill City Guesthouse" }],
   creator: "Godmill City Guesthouse",
   publisher: "Godmill City Guesthouse",
 
   alternates: {
     canonical: "https://www.godmillcityguesthouse.com",
+  },
+
+  icons: {
+    icon: [
+      {
+        url: "/favicon.png",
+        sizes: "any",
+      },
+      {
+        url: "/gmc-icon-32.png",
+        type: "image/png",
+        sizes: "32x32",
+      },
+      {
+        url: "/gmc-icon-192.png",
+        type: "image/png",
+        sizes: "192x192",
+      },
+    ],
+    apple: [
+      {
+        url: "/gmc-apple-icon.png",
+        type: "image/png",
+        sizes: "180x180",
+      },
+    ],
+    shortcut: "/favicon.png",
   },
 
   openGraph: {

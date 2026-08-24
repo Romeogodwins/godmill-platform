@@ -346,10 +346,9 @@ export async function POST(request: Request) {
     // ---------------------------------------------
 
     const bookingReference =
-      `GCM-${Date.now()
-        .toString()
-        .slice(-6)}`;
-
+  `GMC-${Date.now()
+    .toString()
+    .slice(-6)}`;
     // ---------------------------------------------
     // CREATE GUEST
     // ---------------------------------------------

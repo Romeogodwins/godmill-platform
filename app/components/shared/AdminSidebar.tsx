@@ -12,6 +12,7 @@ const operationsMenu = [
   { title: "Guests", href: "/admin/guests" },
   { title: "Payments", href: "/admin/payments" },
   { title: "Invoices", href: "/admin/invoices" },
+  { title: "Gallery", href: "/admin/gallery" },
   { title: "Expenses", href: "/admin/expenses" },
   { title: "Reports", href: "/admin/reports" },
 ];
@@ -30,9 +31,13 @@ export default function AdminSidebar() {
   const isActive = (href: string) =>
     href === "/admin"
       ? pathname === "/admin"
-      : pathname === href || pathname.startsWith(`${href}/`);
+      : pathname === href ||
+        pathname.startsWith(`${href}/`);
 
-  const renderLink = (item: { title: string; href: string }) => (
+  const renderLink = (item: {
+    title: string;
+    href: string;
+  }) => (
     <Link
       key={item.href}
       href={item.href}

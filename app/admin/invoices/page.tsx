@@ -75,7 +75,7 @@ function invoiceNumber(booking: Booking) {
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
 
-  return `INV-${y}${m}${d}-${booking.booking_reference.replace("GCM-", "")}`;
+  return `INV-${y}${m}${d}-${booking.booking_reference.replace(/^GM[CM]-/, "")}`;
 }
 
 function paymentAmount(payment: Payment) {
@@ -194,207 +194,182 @@ export default function InvoicesPage() {
   }
 
   async function downloadPdf(booking: Booking) {
-  const doc = new jsPDF();
-  const inv = invoiceNumber(booking);
-  const room = booking.rooms?.room_number ?? "Unassigned";
-  const financials = getFinancials(booking);
+    const doc = new jsPDF();
+    const inv = invoiceNumber(booking);
+    const room = booking.rooms?.room_number ?? "Unassigned";
+    const financials = getFinancials(booking);
 
-  // Load Godmill logo from /public/logo.png
-  try {
-    const response = await fetch("/logo.png");
-    const blob = await response.blob();
+    doc.setFillColor(17, 17, 17);
+    doc.rect(0, 0, 210, 43, "F");
 
-    const logoData = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    try {
+      const response = await fetch("/logo.png");
+      if (!response.ok) throw new Error(`Logo request failed: ${response.status}`);
 
-    doc.addImage(logoData, "PNG", 82, 8, 46, 25);
-  } catch (error) {
-    console.error("Unable to load Godmill logo:", error);
+      const blob = await response.blob();
+      const logoData = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
 
+      const format =
+        blob.type === "image/jpeg" || blob.type === "image/jpg" ? "JPEG" : "PNG";
+
+      doc.addImage(logoData, format, 18, 8, 42, 24);
+    } catch (error) {
+      console.error("Unable to load Godmill logo:", error);
+      doc.setTextColor(212, 177, 111);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.text("GODMILL", 18, 22);
+    }
+
+    doc.setTextColor(212, 177, 111);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.text("GODMILL", 105, 20, { align: "center" });
-  }
+    doc.setFontSize(15);
+    doc.text("GODMILL CITY GUESTHOUSE", 190, 14, { align: "right" });
 
-  // Guesthouse heading
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("Godmill City Guesthouse", 105, 39, {
-    align: "center",
-  });
-
-  doc.setFontSize(17);
-  doc.text("INVOICE", 105, 49, {
-    align: "center",
-  });
-
-  doc.setDrawColor(190);
-  doc.line(20, 55, 190, 55);
-
-  let y = 65;
-
-  const row = (label: string, value: string) => {
+    doc.setTextColor(235, 235, 235);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(9.5);
-    doc.text(label, 20, y);
+    doc.setFontSize(8.5);
+    doc.text("217 Khibitswane, Taung", 190, 21, { align: "right" });
+    doc.text("Cokonyane Road near Boemma Waters", 190, 27, { align: "right" });
+    doc.text("Tel: 079 058 2637", 190, 33, { align: "right" });
 
+    doc.setFillColor(212, 177, 111);
+    doc.rect(0, 43, 210, 2, "F");
+
+    doc.setTextColor(20, 20, 20);
     doc.setFont("helvetica", "bold");
-    doc.text(value || "-", 190, y, {
+    doc.setFontSize(22);
+    doc.text("INVOICE", 20, 60);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(95, 95, 95);
+    doc.text(`Invoice No: ${inv}`, 190, 53, { align: "right" });
+    doc.text(`Booking Ref: ${booking.booking_reference}`, 190, 59, {
       align: "right",
     });
+    doc.text(
+      `Issued: ${new Date().toLocaleDateString("en-ZA", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })}`,
+      190,
+      65,
+      { align: "right" }
+    );
+
+    doc.setDrawColor(220);
+    doc.line(20, 72, 190, 72);
+
+    let y = 82;
+
+    const sectionHeading = (title: string) => {
+      doc.setFillColor(247, 244, 237);
+      doc.roundedRect(20, y - 5, 170, 10, 2, 2, "F");
+      doc.setTextColor(181, 141, 69);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text(title, 24, y + 1.5);
+      y += 12;
+    };
+
+    const row = (label: string, value: string) => {
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(9.5);
+      doc.text(label, 22, y);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(25, 25, 25);
+      doc.text(value || "-", 188, y, { align: "right" });
+      y += 7;
+    };
+
+    sectionHeading("GUEST & BOOKING DETAILS");
+    row("Guest", booking.guest_name);
+    row("Phone", booking.phone || "-");
+    row("Email", booking.email || "-");
+    row("Room", `${room} - ${booking.room_type}`);
+    row("Check-in", dateText(booking.check_in));
+    row("Check-out", dateText(booking.check_out));
+    row("Nights", String(booking.nights));
+
+    y += 3;
+    sectionHeading("INVOICE SUMMARY");
+    row("Accommodation", money(booking.room_total));
+    row("Breakfast", money(booking.breakfast_total));
+    row("Total Charged", money(booking.grand_total));
+    row("Amount Paid", money(financials.paid));
+    row("Balance Due", money(financials.balance));
+    row("Payment Status", financials.paymentStatus.toUpperCase());
+
+    y += 3;
+    doc.setFillColor(247, 244, 237);
+    doc.roundedRect(20, y, 170, 21, 3, 3, "F");
+
+    doc.setTextColor(181, 141, 69);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text(
+      financials.balance === 0 ? "PAID IN FULL" : "BALANCE DUE",
+      28,
+      y + 13
+    );
+
+    doc.setTextColor(20, 20, 20);
+    doc.setFontSize(17);
+    doc.text(money(financials.balance), 182, y + 13, { align: "right" });
+
+    y += 31;
+    sectionHeading("BANKING DETAILS");
+
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(45, 45, 45);
+    doc.setFontSize(9.5);
+    doc.text("Bank: FNB", 22, y);
+    doc.text("Account Name: Godmill", 108, y);
 
     y += 7;
-  };
+    doc.text("Account Number: 62836688616", 22, y);
+    doc.text("Account Type: Current", 108, y);
 
-  // Invoice and guest information
-  row("Invoice Number", inv);
-  row("Booking Reference", booking.booking_reference);
-  row("Guest", booking.guest_name);
-  row("Phone", booking.phone || "-");
-  row("Email", booking.email || "-");
-  row("Room", `${room} - ${booking.room_type}`);
-  row("Check-in", dateText(booking.check_in));
-  row("Check-out", dateText(booking.check_out));
-  row("Nights", String(booking.nights));
+    y += 7;
+    doc.setFont("helvetica", "bold");
+    doc.text(
+      `Payment Reference: ${booking.guest_name || booking.booking_reference}`,
+      22,
+      y
+    );
 
-  y += 2;
+    doc.setDrawColor(212, 177, 111);
+    doc.line(20, 274, 190, 274);
 
-  doc.setDrawColor(220);
-  doc.line(20, y, 190, y);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text(
+      "Godmill City Guesthouse | 217 Khibitswane, Taung | Tel: 079 058 2637",
+      105,
+      281,
+      { align: "center" }
+    );
+    doc.text(
+      "Thank you for choosing Godmill City Guesthouse.",
+      105,
+      286,
+      { align: "center" }
+    );
 
-  y += 8;
+    doc.save(`${inv}.pdf`);
+  }
 
-  // Charges
-  row("Accommodation", money(booking.room_total));
-  row("Breakfast", money(booking.breakfast_total));
-  row("Total Charged", money(booking.grand_total));
-  row("Amount Paid", money(financials.paid));
-  row("Balance Due", money(financials.balance));
-  row(
-    "Payment Status",
-    financials.paymentStatus.toUpperCase()
-  );
-
-  // Payment status box
-  y += 2;
-
-  doc.setFillColor(247, 244, 237);
-  doc.rect(20, y, 170, 20, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-
-  doc.text(
-    financials.balance === 0
-      ? "PAID IN FULL"
-      : "BALANCE DUE",
-    28,
-    y + 13
-  );
-
-  doc.setFontSize(16);
-
-  doc.text(
-    money(financials.balance),
-    182,
-    y + 13,
-    {
-      align: "right",
-    }
-  );
-
-  // Banking details
-  y += 30;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text("BANKING DETAILS", 20, y);
-
-  y += 8;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9.5);
-
-  doc.text("Bank: FNB", 20, y);
-  doc.text("Account Name: Godmill", 105, y);
-
-  y += 7;
-
-  doc.text(
-    "Account Number: 62836688616",
-    20,
-    y
-  );
-
-  doc.text(
-    "Account Type: Current",
-    105,
-    y
-  );
-
-  y += 7;
-
-  doc.setFont("helvetica", "bold");
-  doc.text(
-    `Payment Reference: ${
-      booking.guest_name ||
-      booking.booking_reference
-    }`,
-    20,
-    y
-  );
-
-  // Footer
-  y += 12;
-
-  doc.setDrawColor(220);
-  doc.line(20, y, 190, y);
-
-  y += 8;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-
-  doc.text(
-    "Godmill City Guesthouse",
-    105,
-    y,
-    {
-      align: "center",
-    }
-  );
-
-  y += 6;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-
-  doc.text(
-    "217 Khibitswane, Taung - Cokonyane Road near Boemma Waters",
-    105,
-    y,
-    {
-      align: "center",
-    }
-  );
-
-  y += 5;
-
-  doc.text(
-    "Tel: 079 058 2637",
-    105,
-    y,
-    {
-      align: "center",
-    }
-  );
-
-  doc.save(`${inv}.pdf`);
-}  function printInvoice(booking: Booking) {
+  function printInvoice(booking: Booking) {
     const inv = invoiceNumber(booking);
     const room = booking.rooms?.room_number ?? "Unassigned";
     const financials = getFinancials(booking);
@@ -411,52 +386,86 @@ export default function InvoicesPage() {
       <head>
         <title>${inv}</title>
         <style>
-          body{font-family:Arial,sans-serif;padding:40px;color:#111}
-          .invoice{max-width:720px;margin:auto;border:1px solid #ddd;padding:40px}
-          .head{text-align:center;border-bottom:2px solid #d4b16f;padding-bottom:20px}
-          h1{color:#b58d45;letter-spacing:2px;margin:0}
-          h2{margin:18px 0 0}
-          .row{display:flex;justify-content:space-between;gap:25px;padding:10px 0;border-bottom:1px solid #eee}
+          *{box-sizing:border-box}
+          body{font-family:Arial,sans-serif;margin:0;padding:30px;background:#f4f4f4;color:#111}
+          .invoice{max-width:800px;margin:auto;background:#fff;border:1px solid #ddd}
+          .letterhead{background:#111;color:#fff;padding:24px 30px;border-bottom:5px solid #d4b16f;display:flex;align-items:center;justify-content:space-between;gap:30px}
+          .brand{color:#d4b16f;font-size:26px;font-weight:800;letter-spacing:2px}
+          .business{text-align:right;line-height:1.6;font-size:13px}
+          .business strong{display:block;color:#d4b16f;font-size:17px;letter-spacing:1px}
+          .content{padding:32px}
+          .title-row{display:flex;justify-content:space-between;gap:30px;align-items:flex-start;border-bottom:1px solid #ddd;padding-bottom:20px}
+          h1{font-size:30px;margin:0}
+          .meta{text-align:right;color:#666;font-size:13px;line-height:1.7}
+          .section-title{margin-top:24px;background:#f7f4ed;color:#b58d45;font-weight:800;padding:10px 12px;border-radius:8px;font-size:13px;letter-spacing:1px}
+          .row{display:flex;justify-content:space-between;gap:25px;padding:9px 3px;border-bottom:1px solid #eee;font-size:14px}
           .label{color:#666}.value{font-weight:700;text-align:right}
-          .payment{margin-top:20px;border:1px solid #ddd;border-radius:10px;padding:14px 18px}
-          .total{margin-top:20px;padding:20px;background:#f7f4ed;font-size:22px;font-weight:800;display:flex;justify-content:space-between}
-          .footer{text-align:center;color:#666;font-size:13px;line-height:1.7;margin-top:35px}
-          @media print{body{padding:0}.invoice{border:none}}
+          .total{margin-top:22px;padding:20px;background:#f7f4ed;border-radius:10px;font-size:21px;font-weight:800;display:flex;justify-content:space-between}
+          .total span:first-child{color:#b58d45}
+          .footer{text-align:center;color:#666;font-size:12px;line-height:1.7;margin-top:35px;padding-top:18px;border-top:2px solid #d4b16f}
+          @media print{
+            body{padding:0;background:#fff}
+            .invoice{border:none}
+            .letterhead,.section-title,.total{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+          }
         </style>
       </head>
       <body>
         <div class="invoice">
-          <div class="head">
-            <h1>GODMILL</h1>
-            <div>Godmill City Guesthouse</div>
-            <h2>INVOICE</h2>
+          <div class="letterhead">
+            <div class="brand">GODMILL</div>
+            <div class="business">
+              <strong>GODMILL CITY GUESTHOUSE</strong>
+              217 Khibitswane, Taung<br>
+              Cokonyane Road near Boemma Waters<br>
+              Tel: 079 058 2637
+            </div>
           </div>
 
-          <div class="row"><span class="label">Invoice Number</span><span class="value">${inv}</span></div>
-          <div class="row"><span class="label">Booking Reference</span><span class="value">${booking.booking_reference}</span></div>
-          <div class="row"><span class="label">Guest</span><span class="value">${booking.guest_name}</span></div>
-          <div class="row"><span class="label">Room</span><span class="value">${room} - ${booking.room_type}</span></div>
-          <div class="row"><span class="label">Stay</span><span class="value">${dateText(booking.check_in)} - ${dateText(booking.check_out)}</span></div>
-          <div class="row"><span class="label">Nights</span><span class="value">${booking.nights}</span></div>
-          <div class="row"><span class="label">Accommodation</span><span class="value">${money(booking.room_total)}</span></div>
-          <div class="row"><span class="label">Breakfast</span><span class="value">${money(booking.breakfast_total)}</span></div>
+          <div class="content">
+            <div class="title-row">
+              <h1>INVOICE</h1>
+              <div class="meta">
+                <strong>Invoice No:</strong> ${inv}<br>
+                <strong>Booking Ref:</strong> ${booking.booking_reference}<br>
+                <strong>Issued:</strong> ${new Date().toLocaleDateString("en-ZA")}
+              </div>
+            </div>
 
-          <div class="payment">
+            <div class="section-title">GUEST &amp; BOOKING DETAILS</div>
+            <div class="row"><span class="label">Guest</span><span class="value">${booking.guest_name}</span></div>
+            <div class="row"><span class="label">Phone</span><span class="value">${booking.phone || "-"}</span></div>
+            <div class="row"><span class="label">Email</span><span class="value">${booking.email || "-"}</span></div>
+            <div class="row"><span class="label">Room</span><span class="value">${room} - ${booking.room_type}</span></div>
+            <div class="row"><span class="label">Stay</span><span class="value">${dateText(booking.check_in)} - ${dateText(booking.check_out)}</span></div>
+            <div class="row"><span class="label">Nights</span><span class="value">${booking.nights}</span></div>
+
+            <div class="section-title">INVOICE SUMMARY</div>
+            <div class="row"><span class="label">Accommodation</span><span class="value">${money(booking.room_total)}</span></div>
+            <div class="row"><span class="label">Breakfast</span><span class="value">${money(booking.breakfast_total)}</span></div>
             <div class="row"><span class="label">Total Charged</span><span class="value">${money(booking.grand_total)}</span></div>
             <div class="row"><span class="label">Amount Paid</span><span class="value">${money(financials.paid)}</span></div>
             <div class="row"><span class="label">Balance Due</span><span class="value">${money(financials.balance)}</span></div>
             <div class="row"><span class="label">Payment Status</span><span class="value">${financials.paymentStatus}</span></div>
-          </div>
 
-          <div class="total">
-            <span>${financials.balance === 0 ? "PAID IN FULL" : "BALANCE DUE"}</span>
-            <span>${money(financials.balance)}</span>
-          </div>
+            <div class="total">
+              <span>${financials.balance === 0 ? "PAID IN FULL" : "BALANCE DUE"}</span>
+              <span>${money(financials.balance)}</span>
+            </div>
 
-          <div class="footer">
-            <strong>Godmill City Guesthouse</strong><br>
-            217 Khibitswane, Taung - Cokonyane Road near Boemma Waters<br>
-            Tel: 079 058 2637
+            <div class="section-title">BANKING DETAILS</div>
+            <div class="row"><span class="label">Bank</span><span class="value">FNB</span></div>
+            <div class="row"><span class="label">Account Name</span><span class="value">Godmill</span></div>
+            <div class="row"><span class="label">Account Number</span><span class="value">62836688616</span></div>
+            <div class="row"><span class="label">Account Type</span><span class="value">Current</span></div>
+            <div class="row"><span class="label">Payment Reference</span><span class="value">${booking.guest_name || booking.booking_reference}</span></div>
+
+            <div class="footer">
+              <strong>Godmill City Guesthouse</strong><br>
+              217 Khibitswane, Taung - Cokonyane Road near Boemma Waters<br>
+              Tel: 079 058 2637<br>
+              Thank you for choosing Godmill City Guesthouse.
+            </div>
           </div>
         </div>
         <script>window.onload=()=>window.print();</script>

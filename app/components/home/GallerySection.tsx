@@ -1,36 +1,172 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-const images = [
+interface GalleryImage {
+  id: string;
+  public_url: string;
+  title: string;
+  caption: string | null;
+  alt_text: string;
+  category: string;
+  is_featured: boolean;
+  is_cover: boolean;
+  sort_order: number;
+}
+
+const fallbackImages: GalleryImage[] = [
   {
-    src: "/Pool.jpeg",
-    alt: "Swimming pool at Godmill City Guesthouse in Taung",
+    id: "fallback-pool",
+    public_url: "/Pool.jpeg",
+    title: "Swimming Pool",
+    caption: null,
+    alt_text: "Swimming pool at Godmill City Guesthouse in Taung",
+    category: "pool",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 101,
   },
   {
-    src: "/Courtyard.jpeg",
-    alt: "Courtyard at Godmill City Guesthouse in Taung",
+    id: "fallback-courtyard",
+    public_url: "/Courtyard.jpeg",
+    title: "Courtyard",
+    caption: null,
+    alt_text: "Courtyard at Godmill City Guesthouse in Taung",
+    category: "courtyard",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 102,
   },
   {
-    src: "/Room 3.jpeg",
-    alt: "Executive room at Godmill City Guesthouse in Taung",
+    id: "fallback-executive",
+    public_url: "/Room 3.jpeg",
+    title: "Executive Room",
+    caption: null,
+    alt_text: "Executive room at Godmill City Guesthouse in Taung",
+    category: "executive",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 103,
   },
   {
-    src: "/Room 2.jpeg",
-    alt: "Standard room at Godmill City Guesthouse in Taung",
+    id: "fallback-standard",
+    public_url: "/Room 2.jpeg",
+    title: "Standard Room",
+    caption: null,
+    alt_text: "Standard room at Godmill City Guesthouse in Taung",
+    category: "standard-aircon",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 104,
   },
   {
-    src: "/Room 1.jpeg",
-    alt: "Family room at Godmill City Guesthouse in Taung",
+    id: "fallback-family",
+    public_url: "/Room 1.jpeg",
+    title: "Family Room",
+    caption: null,
+    alt_text: "Family room at Godmill City Guesthouse in Taung",
+    category: "family-aircon",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 105,
   },
   {
-    src: "/Bathroom.jpeg",
-    alt: "Private bathroom at Godmill City Guesthouse in Taung",
+    id: "fallback-bathroom",
+    public_url: "/Bathroom.jpeg",
+    title: "Private Bathroom",
+    caption: null,
+    alt_text: "Private bathroom at Godmill City Guesthouse in Taung",
+    category: "bathroom",
+    is_featured: false,
+    is_cover: false,
+    sort_order: 106,
   },
 ];
 
+function buildHomepageGallery(
+  uploadedImages: GalleryImage[]
+): GalleryImage[] {
+  const featured = uploadedImages.filter(
+    (image) => image.is_featured
+  );
+
+  const preferred =
+    featured.length > 0 ? featured : uploadedImages;
+
+  const combined = [...preferred];
+
+  for (const fallback of fallbackImages) {
+    if (combined.length >= 6) {
+      break;
+    }
+
+    const duplicateCategory = combined.some(
+      (image) =>
+        image.category === fallback.category &&
+        image.title.toLowerCase() ===
+          fallback.title.toLowerCase()
+    );
+
+    if (!duplicateCategory) {
+      combined.push(fallback);
+    }
+  }
+
+  return combined.slice(0, 6);
+}
+
 export default function GallerySection() {
+  const [images, setImages] =
+    useState<GalleryImage[]>(fallbackImages);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadGallery() {
+      try {
+        const response = await fetch("/api/gallery", {
+          cache: "no-store",
+        });
+
+        const result = await response.json();
+
+        if (
+          !cancelled &&
+          response.ok &&
+          result.success &&
+          Array.isArray(result.images)
+        ) {
+          const uploadedImages =
+            result.images as GalleryImage[];
+
+          if (uploadedImages.length > 0) {
+            setImages(
+              buildHomepageGallery(uploadedImages)
+            );
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Unable to load homepage gallery:",
+          error
+        );
+      }
+    }
+
+    loadGallery();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
-    <section id="gallery" className="bg-[#080808] py-24">
+    <section
+      id="gallery"
+      className="bg-[#080808] py-24"
+    >
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
@@ -43,8 +179,9 @@ export default function GallerySection() {
             </h2>
 
             <p className="mt-5 max-w-2xl text-lg leading-8 text-gray-400">
-              Explore our rooms, swimming pool, courtyard and guest
-              facilities before booking your stay in Taung.
+              Explore our rooms, swimming pool,
+              courtyard and guest facilities before
+              booking your stay in Taung.
             </p>
           </div>
 
@@ -60,7 +197,7 @@ export default function GallerySection() {
           {images.map((image, index) => (
             <Link
               href="/gallery"
-              key={image.src}
+              key={image.id}
               className={`group relative overflow-hidden rounded-3xl ${
                 index === 0
                   ? "h-80 sm:col-span-2 lg:col-span-2 lg:h-[420px]"
@@ -68,9 +205,14 @@ export default function GallerySection() {
               }`}
             >
               <Image
-                src={image.src}
-                alt={image.alt}
+                src={image.public_url}
+                alt={
+                  image.alt_text ||
+                  image.title ||
+                  "Godmill City Guesthouse"
+                }
                 fill
+                unoptimized
                 sizes={
                   index === 0
                     ? "(max-width: 1024px) 100vw, 66vw"
@@ -79,7 +221,19 @@ export default function GallerySection() {
                 className="object-cover transition duration-700 group-hover:scale-105"
               />
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" />
+
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <p className="text-lg font-semibold text-white">
+                  {image.title}
+                </p>
+
+                {image.caption && (
+                  <p className="mt-1 text-sm text-gray-300">
+                    {image.caption}
+                  </p>
+                )}
+              </div>
             </Link>
           ))}
         </div>
