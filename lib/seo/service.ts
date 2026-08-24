@@ -1,4 +1,4 @@
-﻿import {
+import {
   auditAllSeoPages,
   auditSeoPage,
 } from "./auditor";
@@ -12,6 +12,11 @@ import {
   getSeoTasks,
   saveAuditSnapshot,
 } from "./repository";
+
+import {
+  getRankingSummary,
+  getSearchConsoleBaseline,
+} from "./rankings";
 
 import {
   overallSeoScore,
@@ -53,6 +58,10 @@ export async function getSeoOverview(): Promise<
       getSeoTasks(),
     ]);
 
+  const rankings = getSearchConsoleBaseline();
+  const rankingSummary =
+    getRankingSummary(rankings);
+
   const allChecks = audits.flatMap(
     (audit) => audit.checks
   );
@@ -77,6 +86,8 @@ export async function getSeoOverview(): Promise<
     keywords,
     audits,
     tasks,
+    rankings,
+    rankingSummary,
     generatedAt: new Date().toISOString(),
   };
 }

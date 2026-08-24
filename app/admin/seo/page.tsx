@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import RankingGrowthSection from "./RankingGrowthSection";
 
 import {
   getSeoOverview,
@@ -234,6 +235,11 @@ export default async function SeoDashboardPage() {
           remains a future external integration.
         </p>
       </section>
+
+      <RankingGrowthSection
+        rankings={overview.rankings}
+        summary={overview.rankingSummary}
+      />
 
       <section className="mt-12">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -519,3 +525,4 @@ export default async function SeoDashboardPage() {
     </div>
   );
 }
+

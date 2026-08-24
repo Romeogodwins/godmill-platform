@@ -1,4 +1,4 @@
-﻿export type SeoSeverity =
+export type SeoSeverity =
   | "critical"
   | "high"
   | "medium"
@@ -21,6 +21,11 @@ export type SeoCheckKey =
   | "localRelevance"
   | "responsive";
 
+export type SeoRankingAction =
+  | "protect"
+  | "improve"
+  | "opportunity";
+
 export interface SeoKeyword {
   keyword: string;
   targetPage: string;
@@ -32,6 +37,31 @@ export interface SeoKeyword {
   priority: SeoSeverity;
   cluster: string;
   active: boolean;
+}
+
+export interface SeoRanking {
+  query: string;
+  clicks: number;
+  impressions: number;
+  position: number;
+  targetPosition: number;
+  targetPage: string;
+  action: SeoRankingAction;
+  priority: SeoSeverity;
+  note: string;
+  source: "search-console-baseline";
+  measuredAt: string;
+}
+
+export interface SeoRankingSummary {
+  totalQueries: number;
+  protect: number;
+  improve: number;
+  opportunity: number;
+  totalClicks: number;
+  totalImpressions: number;
+  averagePosition: number;
+  measuredAt: string;
 }
 
 export interface SeoPageConfig {
@@ -95,5 +125,7 @@ export interface SeoOverview {
   keywords: SeoKeyword[];
   audits: SeoAuditResult[];
   tasks: SeoTask[];
+  rankings: SeoRanking[];
+  rankingSummary: SeoRankingSummary;
   generatedAt: string;
 }
