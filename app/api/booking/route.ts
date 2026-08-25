@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { createSupabaseClient } from "../../../lib/supabase/client";
+import { createSupabaseAdminClient } from "../../../lib/supabase/admin";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -33,7 +33,7 @@ interface BookingPayload {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createSupabaseClient();
+    const supabase = createSupabaseAdminClient();
 
     const payload =
       (await request.json()) as BookingPayload;
