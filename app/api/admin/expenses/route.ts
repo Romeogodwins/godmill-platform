@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "../../../../lib/supabase/server";
+﻿import { NextResponse } from "next/server";
+import { createSupabaseAdminClient } from "../../../../lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
 
     const { data: expenses, error } = await supabase
       .from("expenses")
@@ -105,7 +105,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
 
     const body = await request.json();
 
@@ -226,3 +226,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

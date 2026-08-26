@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "../../../../lib/supabase/server";
+﻿import { NextResponse } from "next/server";
+import { createSupabaseAdminClient } from "../../../../lib/supabase/admin";
 import { sendPaymentReceiptEmail } from "../../../../lib/email/godmill";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 */
 export async function GET() {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
 
     // Load bookings
     const { data: bookings, error: bookingsError } = await supabase
@@ -173,7 +173,7 @@ export async function GET() {
 */
 export async function POST(request: Request) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
 
     const body = await request.json();
 
@@ -404,3 +404,4 @@ export async function POST(request: Request) {
     );
   }
 }
+
