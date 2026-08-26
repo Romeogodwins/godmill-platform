@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "../../../../lib/supabase/server";
+﻿import { NextResponse } from "next/server";
+import { createSupabaseAdminClient } from "../../../../lib/supabase/admin";
 
 export async function GET() {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
 
     const { data, error } = await supabase
       .from("settings")
@@ -46,7 +46,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const payload = await request.json();
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
 
     const { data: existing, error: lookupError } = await supabase
       .from("settings")
@@ -126,3 +126,4 @@ export async function PATCH(request: Request) {
     );
   }
 }
+
